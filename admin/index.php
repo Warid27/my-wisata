@@ -113,7 +113,8 @@ include __DIR__ . '/../includes/header.php';
                 'label' => 'Export Data',
                 'icon' => 'bi-download',
                 'class' => 'btn-secondary',
-                'type' => 'button'
+                'type' => 'button',
+                'onclick' => 'showExportModal()'
             ]
         ]
     ]);
@@ -137,5 +138,70 @@ include __DIR__ . '/../includes/header.php';
     </div>
 
 </main>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="exportForm" method="get" action="<?php echo base_url('api/export_pdf.php'); ?>" target="_blank">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="exportType" class="form-label">Tipe Export</label>
+                        <select class="form-select" id="exportType" name="type" required>
+                            <option value="sales">Laporan Penjualan</option>
+                            <option value="tickets">Laporan Tiket Terjual</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dateFrom" class="form-label">Dari Tanggal</label>
+                        <input type="date" class="form-control" id="dateFrom" name="date_from" 
+                               value="<?php echo date('Y-m-01'); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dateTo" class="form-label">Sampai Tanggal</label>
+                        <input type="date" class="form-control" id="dateTo" name="date_to" 
+                               value="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download me-2"></i>Export
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showExportModal() {
+    var modal = new bootstrap.Modal(document.getElementById('exportModal'));
+    modal.show();
+}
+
+// Set max date to today for date inputs
+document.addEventListener('DOMContentLoaded', function() {
+    const dateTo = document.getElementById('dateTo');
+    const dateFrom = document.getElementById('dateFrom');
+    const today = new Date().toISOString().split('T')[0];
+    
+    dateTo.max = today;
+    dateFrom.max = today;
+    
+    // Ensure dateFrom is not after dateTo
+    dateTo.addEventListener('change', function() {
+        dateFrom.max = this.value;
+    });
+    
+    dateFrom.addEventListener('change', function() {
+        dateTo.min = this.value;
+    });
+});
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

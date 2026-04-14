@@ -2,6 +2,9 @@ RewriteEngine On
 
 RewriteBase /my-wisata-pecut/
 
+# Custom 404 error page
+ErrorDocument 404 /my-wisata-pecut/404.php
+
 # Jangan ganggu file atau folder asli
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d

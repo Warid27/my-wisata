@@ -71,8 +71,11 @@ include __DIR__ . '/../includes/header.php';
             <p class="page-subtitle">Analisis penjualan dan statistik</p>
         </div>
         <div class="page-actions">
-            <button type="button" class="btn btn-secondary" onclick="exportReport()">
-                <i class="bi bi-download me-2"></i>Export Excel
+            <button type="button" class="btn btn-success" onclick="exportExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>Export Excel
+            </button>
+            <button type="button" class="btn btn-danger" onclick="exportPDF()">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
             </button>
         </div>
     </div>
@@ -277,23 +280,144 @@ include __DIR__ . '/../includes/header.php';
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script>
-function exportReport() {
-    // Get table data
-    const table = document.getElementById('salesTable');
-    const ws = XLSX.utils.table_to_sheet(table);
-    
+function exportExcel() {
     // Create workbook
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
     
-    // Generate filename with date range
+    // Get date range
     const dateFrom = document.getElementById('date_from').value;
     const dateTo = document.getElementById('date_to').value;
+    
+    // Sheet 1: Summary Data
+    const summaryData = [
+        ['LAPORAN PENJUALAN'],
+        ['Periode', formatDate(dateFrom) + ' - ' + formatDate(dateTo)],
+        [],
+        ['RINGKASAN'],
+        ['Total Pesanan', document.querySelector('.border-left-primary .h5').textContent],
+        ['Total Pendapatan', document.querySelector('.border-left-success .h5').textContent],
+        ['Tiket Terjual', document.querySelector('.border-left-info .h5').textContent],
+        ['Pesanan Dibatalkan', document.querySelector('.border-left-warning .h5').textContent]
+    ];
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWs, 'Ringkasan');
+    
+    // Sheet 2: Sales Detail
+    const salesTable = document.getElementById('salesTable');
+    if (salesTable) {
+        const salesWs = XLSX.utils.table_to_sheet(salesTable);
+        XLSX.utils.book_append_sheet(wb, salesWs, 'Detail Penjualan');
+    }
+    
+    // Sheet 3: Top Events
+    const topEventsTable = document.getElementById('topEventsTable');
+    if (topEventsTable) {
+        const eventsWs = XLSX.utils.table_to_sheet(topEventsTable);
+        XLSX.utils.book_append_sheet(wb, eventsWs, 'Top Events');
+    }
+    
+    // Sheet 4: Payment Statistics
+    const paymentTable = document.getElementById('paymentTable');
+    if (paymentTable) {
+        const paymentWs = XLSX.utils.table_to_sheet(paymentTable);
+        XLSX.utils.book_append_sheet(wb, paymentWs, 'Statistik Pembayaran');
+    }
+    
+    // Generate filename with date range
     const filename = `Laporan_Penjualan_${dateFrom}_s_d_${dateTo}.xlsx`;
     
     // Download file
     XLSX.writeFile(wb, filename);
+}
+
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.text("LAPORAN PENJUALAN", 105, 15, { align: "center" });
+    doc.setFontSize(10);
+    doc.text("Periode: " + formatDate(dateFrom) + " - " + formatDate(dateTo), 105, 22, { align: "center" });
+    
+    let yPosition = 35;
+    
+    // Add summary
+    doc.setFontSize(12);
+    doc.text("Ringkasan:", 14, yPosition);
+    yPosition += 10;
+    
+    doc.setFontSize(10);
+    doc.text("Total Pesanan: " + document.querySelector('.border-left-primary .h5').textContent, 14, yPosition);
+    yPosition += 7;
+    doc.text("Total Pendapatan: " + document.querySelector('.border-left-success .h5').textContent, 14, yPosition);
+    yPosition += 7;
+    doc.text("Tiket Terjual: " + document.querySelector('.border-left-info .h5').textContent, 14, yPosition);
+    yPosition += 7;
+    doc.text("Pesanan Dibatalkan: " + document.querySelector('.border-left-warning .h5').textContent, 14, yPosition);
+    yPosition += 15;
+    
+    // Add sales table if exists
+    const salesTable = document.getElementById('salesTable');
+    if (salesTable) {
+        const salesData = [];
+        const rows = salesTable.querySelectorAll('tbody tr');
+        Array.from(rows).forEach(row => {
+            const rowData = [];
+            Array.from(row.cells).forEach(cell => {
+                rowData.push(cell.textContent);
+            });
+            salesData.push(rowData);
+        });
+        
+        doc.autoTable({
+            head: [["Tanggal", "Pesanan", "Tiket", "Pendapatan"]],
+            body: salesData,
+            startY: yPosition,
+            styles: { fontSize: 9 }
+        });
+        yPosition = doc.lastAutoTable.finalY + 15;
+    }
+    
+    // Add top events if exists
+    const topEventsTable = document.getElementById('topEventsTable');
+    if (topEventsTable && yPosition < 250) {
+        const eventsData = [];
+        const rows = topEventsTable.querySelectorAll('tbody tr');
+        Array.from(rows).forEach(row => {
+            const rowData = [];
+            Array.from(row.cells).forEach(cell => {
+                rowData.push(cell.textContent);
+            });
+            eventsData.push(rowData);
+        });
+        
+        doc.addPage();
+        doc.setFontSize(12);
+        doc.text("Top Events", 14, 15);
+        
+        doc.autoTable({
+            head: [["No", "Event", "Pesanan", "Tiket Terjual", "Pendapatan"]],
+            body: eventsData,
+            startY: 25,
+            styles: { fontSize: 9 }
+        });
+    }
+    
+    // Save PDF
+    doc.save(`Laporan_Penjualan_${dateFrom}_s_d_${dateTo}.pdf`);
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('id-ID', options);
 }
 </script>
 

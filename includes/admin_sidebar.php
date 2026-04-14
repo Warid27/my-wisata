@@ -114,17 +114,6 @@ function is_menu_active($page, $current, $uri = '') {
                     <span class="nav-text">Laporan</span>
                 </a>
             </li>
-
-            <!-- Settings Section -->
-            <li class="nav-section">
-                <div class="nav-section-title">Pengaturan</div>
-            </li>
-            <li class="nav-item">
-                <a href="<?php echo base_url('admin/settings.php'); ?>" class="nav-link <?php echo is_menu_active('settings', $current_page, $request_uri); ?>">
-                    <i class="nav-icon bi bi-gear"></i>
-                    <span class="nav-text">Pengaturan</span>
-                </a>
-            </li>
         </ul>
 
         <!-- User Profile -->
