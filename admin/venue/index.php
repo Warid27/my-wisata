@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/components/page_header.php';
+require_once __DIR__ . '/../../includes/components/search_filter.php';
+require_once __DIR__ . '/../../includes/components/data_table.php';
 
 require_admin();
 
@@ -32,10 +35,33 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     redirect('admin/venue/');
 }
 
-// Get all venues
-$query = "SELECT * FROM venue ORDER BY nama_venue";
+// Get venues with pagination and search
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$per_page = 10;
+$offset = ($page - 1) * $per_page;
+
+// Search functionality
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Build query
+$where = '';
+$params = [];
+if (!empty($search)) {
+    $where = "WHERE nama_venue LIKE ? OR alamat LIKE ?";
+    $params = ["%$search%", "%$search%"];
+}
+
+// Get total venues
+$count_query = "SELECT COUNT(*) as total FROM venue $where";
+$stmt = $db->prepare($count_query);
+$stmt->execute($params);
+$total_venues = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+$total_pages = ceil($total_venues / $per_page);
+
+// Get venues list
+$query = "SELECT * FROM venue $where ORDER BY nama_venue LIMIT $offset, $per_page";
 $stmt = $db->prepare($query);
-$stmt->execute();
+$stmt->execute($params);
 $venues = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 include __DIR__ . '/../../includes/header.php';
@@ -46,71 +72,111 @@ include __DIR__ . '/../../includes/header.php';
 
 <!-- Main content -->
 <main role="main" class="main-content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Manajemen Venue</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="<?php echo base_url('admin/venue/create.php'); ?>" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Venue
-                    </a>
-                </div>
-            </div>
+    <?php
+    // Page Header Component
+    render_page_header([
+        'title' => 'Manajemen Venue',
+        'subtitle' => 'Kelola data venue event',
+        'actions' => [
+            [
+                'label' => 'Tambah Venue',
+                'icon' => 'bi-plus-circle',
+                'class' => 'btn-primary',
+                'type' => 'link',
+                'href' => base_url('admin/venue/create.php')
+            ]
+        ]
+    ]);
+    ?>
 
-            <!-- Venue Table -->
-            <div class="card shadow">
-                <div class="card-body">
-                    <?php if (empty($venues)): ?>
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Belum ada data venue
-                        </div>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama Venue</th>
-                                        <th>Alamat</th>
-                                        <th>Kapasitas</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php $no = 1; foreach ($venues as $venue): ?>
-                                        <tr>
-                                            <td><?php echo $no++; ?></td>
-                                            <td><?php echo htmlspecialchars($venue['nama_venue']); ?></td>
-                                            <td><?php echo htmlspecialchars($venue['alamat']); ?></td>
-                                            <td><?php echo number_format($venue['kapasitas']); ?> orang</td>
-                                            <td>
-                                                <a href="<?php echo base_url('admin/venue/edit.php?id=' . $venue['id_venue']); ?>" 
-                                                   class="btn btn-sm btn-warning">
-                                                    <i class="bi bi-pencil"></i> Edit
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-danger" 
-                                                        onclick="confirmDelete(<?php echo $venue['id_venue']; ?>)">
-                                                    <i class="bi bi-trash"></i> Hapus
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </main>
-    </div>
-</div>
+    <?php
+    // Search Filter Component
+    render_search_filter([
+        'placeholder' => 'Cari berdasarkan nama venue atau alamat...',
+        'search_value' => $search,
+        'action_url' => '',
+        'method' => 'GET',
+        'show_reset' => true,
+        'reset_url' => 'index.php'
+    ]);
+    ?>
+
+    <?php
+    // Data Table Component
+    render_data_table([
+        'title' => 'Daftar Venue',
+        'data' => $venues,
+        'total_count' => $total_venues,
+        'empty_message' => !empty($search) ? 'Tidak ada venue yang cocok dengan pencarian' : 'Belum ada data venue',
+        'empty_icon' => 'bi-building',
+        'columns' => [
+            [
+                'key' => 'id_venue',
+                'label' => 'ID',
+                'type' => 'badge'
+            ],
+            [
+                'key' => 'nama_venue',
+                'label' => 'Nama Venue',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'alamat',
+                'label' => 'Alamat',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'kapasitas',
+                'label' => 'Kapasitas',
+                'type' => 'text',
+                'format' => 'number'
+            ],
+            [
+                'key' => 'actions',
+                'label' => 'Aksi',
+                'type' => 'actions'
+            ]
+        ],
+        'actions' => [
+            [
+                'label' => 'Edit',
+                'icon' => 'bi-pencil',
+                'class' => 'btn btn-sm btn-warning',
+                'type' => 'link',
+                'href' => base_url('admin/venue/edit.php?id={id}'),
+                'id_key' => 'id_venue'
+            ],
+            [
+                'label' => 'Hapus',
+                'icon' => 'bi-trash',
+                'class' => 'btn btn-sm btn-danger',
+                'onclick' => 'confirmDelete({id})',
+                'id_key' => 'id_venue'
+            ]
+        ]
+    ]);
+    ?>
+
+    <?php
+    // Pagination Component
+    render_pagination([
+        'current_page' => $page,
+        'total_pages' => $total_pages,
+        'total_items' => $total_venues,
+        'per_page' => $per_page,
+        'offset' => $offset,
+        'base_url' => 'index.php',
+        'query_params' => ['search' => $search]
+    ]);
+    ?>
+</main>
 
 
 
 <script>
 function confirmDelete(id) {
     showConfirmation('Apakah Anda yakin ingin menghapus venue ini?', function() {
-        window.location.href = '<?php echo base_url('admin/venue/?delete='); ?>' + id;
+        window.location.href = '?delete=' + id;
     }, {isDanger: true});
 }
 </script>

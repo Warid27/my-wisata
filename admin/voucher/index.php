@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/components/page_header.php';
+require_once __DIR__ . '/../../includes/components/search_filter.php';
+require_once __DIR__ . '/../../includes/components/data_table.php';
+require_once __DIR__ . '/../../includes/components/pagination.php';
 
 require_admin();
 
@@ -48,14 +52,62 @@ if (isset($_GET['toggle']) && is_numeric($_GET['toggle'])) {
     redirect('admin/voucher/');
 }
 
-// Get all vouchers
+// Get vouchers with pagination and search
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$per_page = 10;
+$offset = ($page - 1) * $per_page;
+
+// Search functionality
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Build query
+$where = '';
+$params = [];
+if (!empty($search)) {
+    $where = "WHERE kode_voucher LIKE ?";
+    $params = ["%$search%"];
+}
+
+// Get total vouchers
+$count_query = "SELECT COUNT(*) as total FROM voucher v $where";
+$stmt = $db->prepare($count_query);
+$stmt->execute($params);
+$total_vouchers = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+$total_pages = ceil($total_vouchers / $per_page);
+
+// Get vouchers list
 $query = "SELECT *, 
                  (SELECT COUNT(*) FROM orders WHERE id_voucher = v.id_voucher) as used_count 
           FROM voucher v 
-          ORDER BY created_at DESC";
+          $where
+          ORDER BY created_at DESC LIMIT $offset, $per_page";
 $stmt = $db->prepare($query);
-$stmt->execute();
+$stmt->execute($params);
 $vouchers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Add status and remaining count for each voucher
+foreach ($vouchers as &$voucher) {
+    $sisa = $voucher['kuota'] - $voucher['used_count'];
+    $voucher['sisa'] = $sisa;
+    
+    // Add status badge
+    if ($voucher['status'] === 'aktif') {
+        $voucher['status_badge'] = '<span class="badge bg-success">Aktif</span>';
+        $voucher['status_text'] = 'Aktif';
+    } else {
+        $voucher['status_badge'] = '<span class="badge bg-secondary">Nonaktif</span>';
+        $voucher['status_text'] = 'Nonaktif';
+    }
+    
+    // Add remaining badge
+    if ($sisa <= 0) {
+        $voucher['remaining_badge'] = '<span class="badge bg-danger">Habis</span>';
+    } elseif ($sisa <= 10) {
+        $voucher['remaining_badge'] = '<span class="badge bg-warning">' . number_format($sisa) . '</span>';
+    } else {
+        $voucher['remaining_badge'] = '<span class="badge bg-success">' . number_format($sisa) . '</span>';
+    }
+}
 
 include __DIR__ . '/../../includes/header.php';
 ?>
@@ -65,85 +117,133 @@ include __DIR__ . '/../../includes/header.php';
 
 <!-- Main content -->
 <main role="main" class="main-content">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Manajemen Voucher</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="<?php echo base_url('admin/voucher/create.php'); ?>" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Tambah Voucher
-            </a>
-        </div>
-    </div> <?php if (empty($vouchers)): ?>
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Belum ada data voucher
-        </div>
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Kode</th>
-                        <th>Potongan</th>
-                        <th>Kuota</th>
-                        <th>Terpakai</th>
-                        <th>Sisa</th>
-                        <th>Status</th>
-                        <th>Dibuat</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $no = 1;
-                    foreach ($vouchers as $voucher): ?>
-                        <tr>
-                            <td><?php echo $no++; ?></td>
-                            <td>
-                                <code class="ticket-code"><?php echo htmlspecialchars($voucher['kode_voucher']); ?></code>
-                            </td>
-                            <td><?php echo format_currency($voucher['potongan']); ?></td>
-                            <td><?php echo number_format($voucher['kuota']); ?></td>
-                            <td><?php echo number_format($voucher['used_count']); ?></td>
-                            <td>
-                                <?php $sisa = $voucher['kuota'] - $voucher['used_count']; ?>
-                                <?php if ($sisa <= 0): ?>
-                                    <span class="badge bg-danger">Habis</span>
-                                <?php elseif ($sisa <= 10): ?>
-                                    <span class="badge bg-warning"><?php echo number_format($sisa); ?></span>
-                                <?php else: ?>
-                                    <span class="badge bg-success"><?php echo number_format($sisa); ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($voucher['status'] === 'aktif'): ?>
-                                    <span class="badge bg-success">Aktif</span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary">Nonaktif</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?php echo format_date($voucher['created_at'], 'd M Y H:i'); ?></td>
-                            <td>
-                                <a href="<?php echo base_url('admin/voucher/edit.php?id=' . $voucher['id_voucher']); ?>"
-                                    class="btn btn-sm btn-warning">
-                                    <i class="bi bi-pencil"></i> Edit
-                                </a>
-                                <button type="button" class="btn btn-sm <?php echo $voucher['status'] === 'aktif' ? 'btn-secondary' : 'btn-success'; ?>"
-                                    onclick="toggleStatus(<?php echo $voucher['id_voucher']; ?>)"
-                                    title="<?php echo $voucher['status'] === 'aktif' ? 'Nonaktifkan' : 'Aktifkan'; ?>">
-                                    <i class="bi bi-<?php echo $voucher['status'] === 'aktif' ? 'pause' : 'play'; ?>"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-danger"
-                                    onclick="confirmDelete(<?php echo $voucher['id_voucher']; ?>)">
-                                    <i class="bi bi-trash"></i> Hapus
-                                </button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
-    </div>
-    </div>
+    <?php
+    // Page Header Component
+    render_page_header([
+        'title' => 'Manajemen Voucher',
+        'subtitle' => 'Kelola data voucher dan diskon',
+        'actions' => [
+            [
+                'label' => 'Tambah Voucher',
+                'icon' => 'bi-plus-circle',
+                'class' => 'btn-primary',
+                'type' => 'link',
+                'href' => base_url('admin/voucher/create.php')
+            ]
+        ]
+    ]);
+    ?>
+
+    <?php
+    // Search Filter Component
+    render_search_filter([
+        'placeholder' => 'Cari berdasarkan kode voucher...',
+        'search_value' => $search,
+        'action_url' => '',
+        'method' => 'GET',
+        'show_reset' => true,
+        'reset_url' => 'index.php'
+    ]);
+    ?>
+
+    <?php
+    // Data Table Component
+    render_data_table([
+        'title' => 'Daftar Voucher',
+        'data' => $vouchers,
+        'total_count' => $total_vouchers,
+        'empty_message' => !empty($search) ? 'Tidak ada voucher yang cocok dengan pencarian' : 'Belum ada data voucher',
+        'empty_icon' => 'bi-ticket',
+        'columns' => [
+            [
+                'key' => 'id_voucher',
+                'label' => 'ID',
+                'type' => 'badge'
+            ],
+            [
+                'key' => 'kode_voucher',
+                'label' => 'Kode',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'potongan',
+                'label' => 'Potongan',
+                'type' => 'text',
+                'format' => 'currency'
+            ],
+            [
+                'key' => 'kuota',
+                'label' => 'Kuota',
+                'type' => 'text',
+                'format' => 'number'
+            ],
+            [
+                'key' => 'used_count',
+                'label' => 'Terpakai',
+                'type' => 'text',
+                'format' => 'number'
+            ],
+            [
+                'key' => 'remaining_badge',
+                'label' => 'Sisa',
+                'type' => 'html'
+            ],
+            [
+                'key' => 'status_badge',
+                'label' => 'Status',
+                'type' => 'html'
+            ],
+            [
+                'key' => 'created_at',
+                'label' => 'Dibuat',
+                'type' => 'date',
+                'format' => 'd M Y H:i'
+            ],
+            [
+                'key' => 'actions',
+                'label' => 'Aksi',
+                'type' => 'actions'
+            ]
+        ],
+        'actions' => [
+            [
+                'label' => 'Edit',
+                'icon' => 'bi-pencil',
+                'class' => 'btn btn-sm btn-warning',
+                'type' => 'link',
+                'href' => base_url('admin/voucher/edit.php?id={id}'),
+                'id_key' => 'id_voucher'
+            ],
+            [
+                'label' => 'Toggle',
+                'icon' => 'bi-pause',
+                'class' => 'btn btn-sm btn-secondary',
+                'onclick' => 'toggleStatus({id})',
+                'id_key' => 'id_voucher'
+            ],
+            [
+                'label' => 'Hapus',
+                'icon' => 'bi-trash',
+                'class' => 'btn btn-sm btn-danger',
+                'onclick' => 'confirmDelete({id})',
+                'id_key' => 'id_voucher'
+            ]
+        ]
+    ]);
+    ?>
+
+    <?php
+    // Pagination Component
+    render_pagination([
+        'current_page' => $page,
+        'total_pages' => $total_pages,
+        'total_items' => $total_vouchers,
+        'per_page' => $per_page,
+        'offset' => $offset,
+        'base_url' => 'index.php',
+        'query_params' => ['search' => $search]
+    ]);
+    ?>
 </main>
 
 
@@ -156,7 +256,7 @@ include __DIR__ . '/../../includes/header.php';
     }
 
     function toggleStatus(id) {
-        window.location.href = '<?php echo base_url('admin/voucher/?toggle='); ?>' + id;
+        window.location.href = '?toggle=' + id;
     }
 </script>
 

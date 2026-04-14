@@ -20,6 +20,15 @@ A web-based event ticket booking system built with PHP Native, MySQL, and Bootst
   - Sales analytics per event
   - User purchase history
   - Voucher impact analysis
+- **Reusable Component System**: Modular UI components for admin pages:
+  - Page headers with configurable actions
+  - Search filters with multiple field support
+  - Data tables with various column types
+  - Pagination with query parameter preservation
+- **Dashboard Charts**: Interactive visualizations for:
+  - Sales trends
+  - Event performance
+  - User statistics
 - **PDF Export**: Export reports to PDF format
 - **Responsive Design**: Mobile-friendly interface
 - **Real-time Updates**: Live quota checking and availability
@@ -64,6 +73,12 @@ my-wisata-pecut/
 │   ├── database.php       # Database connection
 │   └── config.php         # Global settings & functions
 ├── includes/              # Reusable components
+│   ├── components/        # UI component system
+│   │   ├── page_header.php      # Page header component
+│   │   ├── search_filter.php    # Search filter component
+│   │   ├── data_table.php       # Data table component
+│   │   ├── pagination.php       # Pagination component
+│   │   └── README.md            # Component documentation
 │   ├── header.php         # HTML header
 │   ├── footer.php         # HTML footer
 │   ├── auth.php           # Authentication middleware
@@ -92,26 +107,35 @@ my-wisata-pecut/
 │   ├── order_detail.php   # Order detail API
 │   └── export_pdf.php     # PDF export
 ├── assets/                # Static assets
-│   ├── css/style.css      # Custom styles
+│   ├── css/               # Stylesheets
+│   │   └── style.css      # Custom styles
+│   ├── js/                # JavaScript files
+│   │   ├── script.js      # Main script
+│   │   └── dashboard-charts.js  # Dashboard chart visualizations
+│   ├── scss/              # SCSS source files
+│   │   └── custom/        # Custom SCSS components
 │   └── images/            # Event images
 ├── sql/                   # Database scripts
-│   └── database.sql       # Database schema
+│   ├── database.sql       # Database schema
+│   ├── add_kategori_table.sql  # Category table migration
+│   └── add_xendit_column.sql   # Xendit payment integration
 ├──               # Landing page
 └── logout.php             # Logout handler
 ```
 
 ## Database Schema
 
-The system uses 9 interconnected tables:
+The system uses 10 interconnected tables:
 
 1. **users** - User accounts and authentication
 2. **venue** - Event venues
-3. **event** - Event information
-4. **tiket** - Ticket types and pricing
-5. **voucher** - Discount vouchers
-6. **orders** - Order headers
-7. **order_detail** - Order line items
-8. **attendee** - Generated tickets
+3. **kategori** - Event categories
+4. **event** - Event information
+5. **tiket** - Ticket types and pricing
+6. **voucher** - Discount vouchers
+7. **orders** - Order headers
+8. **order_detail** - Order line items
+9. **attendee** - Generated tickets
 
 ## Usage Guide
 
@@ -194,6 +218,29 @@ For issues or questions:
 
 ## Changelog
 
+### Version 1.1.0 (2026-04-14)
+- Implemented reusable component system for admin pages
+- Added dashboard charts with interactive visualizations
+- Enhanced search and filtering across all admin modules
+- Added pagination to all admin listing pages
+- Introduced event categories with new kategori table
+- Improved UI/UX with modern dashboard design
+- Reduced code duplication by ~70% across admin pages
+- Added Xendit payment integration columns
+- Enhanced voucher management with status toggles
+- Improved order management with comprehensive filters
+
+### Version 1.0.2 (2025-10-15)
+- Enhanced design UI / UX
+- Fixed .htaccess configuration
+
+### Version 1.0.1 (2026-10-14)
+- Fixed webhook callback issues
+- Improved error logging
+- Enhanced security measures
+- Better session management
+- Fixed responsive design issues
+
 ### Version 1.0.0 (2026-04-14)
 - Initial release with all core features
 - Complete CRUD operations
@@ -202,25 +249,4 @@ For issues or questions:
 - HOTS analysis implementation
 - PDF export feature
 - Responsive design implementation
-
-### Version 1.0.1 (2026-10-14)
-- Fixed webhook callback issues
-- Improved error logging
-- Enhanced security measures
-- Better session management
-- Fixed responsive design issues
-
-### Version 1.0.2 (2025-10-15)
-- Enhanced design UI / UX
-
-### Version 1.0.1 (2026-10-14)
-- Fixed webhook callback issues
-- Improved error logging
-- Enhanced security measures
-- Better session management
-- Fixed responsive design issues
-
-### Version 1.0.2 (2025-10-15)
-- Enhanced design UI / UX
-- Fixed .htaccess configuration
 

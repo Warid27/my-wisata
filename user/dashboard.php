@@ -58,7 +58,7 @@ include __DIR__ . '/../includes/header.php';
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="container mt-4">
+<div class="container fixed-header-spacing">
     <!-- Welcome Section -->
     <div class="row mb-4">
         <div class="col-12">

@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/components/page_header.php';
+require_once __DIR__ . '/../../includes/components/search_filter.php';
+require_once __DIR__ . '/../../includes/components/data_table.php';
+require_once __DIR__ . '/../../includes/components/pagination.php';
 
 require_admin();
 
@@ -32,14 +36,66 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     redirect('admin/tiket/');
 }
 
-// Get all tickets with event
+// Get tickets with pagination and search
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$per_page = 10;
+$offset = ($page - 1) * $per_page;
+
+// Search functionality
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Build query
+$where = '';
+$params = [];
+if (!empty($search)) {
+    $where = "WHERE t.nama_tiket LIKE ? OR e.nama_event LIKE ?";
+    $params = ["%$search%", "%$search%"];
+}
+
+// Get total tickets
+$count_query = "SELECT COUNT(*) as total FROM tiket t JOIN event e ON t.id_event = e.id_event $where";
+$stmt = $db->prepare($count_query);
+$stmt->execute($params);
+$total_tickets = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+$total_pages = ceil($total_tickets / $per_page);
+
+// Get tickets list
 $query = "SELECT t.*, e.nama_event, e.tanggal 
           FROM tiket t 
           JOIN event e ON t.id_event = e.id_event 
-          ORDER BY e.tanggal DESC, t.nama_tiket";
+          $where
+          ORDER BY e.tanggal DESC, t.nama_tiket LIMIT $offset, $per_page";
 $stmt = $db->prepare($query);
-$stmt->execute();
+$stmt->execute($params);
 $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Add sold tickets count and status for each ticket
+foreach ($tickets as &$ticket) {
+    // Get sold tickets count
+    $query = "SELECT COALESCE(SUM(od.qty), 0) as sold 
+              FROM order_detail od 
+              JOIN orders o ON od.id_order = o.id_order 
+              WHERE od.id_tiket = ? AND o.status != 'cancelled'";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$ticket['id_tiket']]);
+    $sold = $stmt->fetch(PDO::FETCH_ASSOC)['sold'];
+    $sisa = $ticket['kuota'] - $sold;
+    
+    $ticket['sold'] = $sold;
+    $ticket['sisa'] = $sisa;
+    
+    // Add status badge
+    if ($sisa <= 0) {
+        $ticket['status_badge'] = '<span class="badge bg-danger">Habis</span>';
+        $ticket['status_text'] = 'Habis';
+    } elseif ($sisa <= 10) {
+        $ticket['status_badge'] = '<span class="badge bg-warning">' . number_format($sisa) . '</span>';
+        $ticket['status_text'] = 'Terbatas';
+    } else {
+        $ticket['status_badge'] = '<span class="badge bg-success">' . number_format($sisa) . '</span>';
+        $ticket['status_text'] = 'Tersedia';
+    }
+}
 
 include __DIR__ . '/../../includes/header.php';
 ?>
@@ -49,95 +105,134 @@ include __DIR__ . '/../../includes/header.php';
 
 <!-- Main content -->
 <main role="main" class="main-content">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Manajemen Tiket</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
-                <a href="<?php echo base_url('admin/tiket/create.php'); ?>" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Tambah Tiket
-                </a>
-            </div>
-        </div>
+    <?php
+    // Page Header Component
+    render_page_header([
+        'title' => 'Manajemen Tiket',
+        'subtitle' => 'Kelola data tiket event',
+        'actions' => [
+            [
+                'label' => 'Tambah Tiket',
+                'icon' => 'bi-plus-circle',
+                'class' => 'btn-primary',
+                'type' => 'link',
+                'href' => base_url('admin/tiket/create.php')
+            ]
+        ]
+    ]);
+    ?>
 
-        <!-- Ticket Table -->
-        <div class="card shadow">
-            <div class="card-body">
-                <?php if (empty($tickets)): ?>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Belum ada data tiket
-                    </div>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama Tiket</th>
-                                    <th>Event</th>
-                                    <th>Tanggal Event</th>
-                                    <th>Harga</th>
-                                    <th>Kuota</th>
-                                    <th>Terjual</th>
-                                    <th>Sisa</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php $no = 1; foreach ($tickets as $ticket): ?>
-                                    <?php 
-                                    // Get sold tickets count
-                                    $query = "SELECT COALESCE(SUM(od.qty), 0) as sold 
-                                              FROM order_detail od 
-                                              JOIN orders o ON od.id_order = o.id_order 
-                                              WHERE od.id_tiket = ? AND o.status != 'cancelled'";
-                                    $stmt = $db->prepare($query);
-                                    $stmt->execute([$ticket['id_tiket']]);
-                                    $sold = $stmt->fetch(PDO::FETCH_ASSOC)['sold'];
-                                    $sisa = $ticket['kuota'] - $sold;
-                                    ?>
-                                    <tr>
-                                        <td><?php echo $no++; ?></td>
-                                        <td><?php echo htmlspecialchars($ticket['nama_tiket']); ?></td>
-                                        <td><?php echo htmlspecialchars($ticket['nama_event']); ?></td>
-                                        <td><?php echo format_date($ticket['tanggal']); ?></td>
-                                        <td><?php echo format_currency($ticket['harga']); ?></td>
-                                        <td><?php echo number_format($ticket['kuota']); ?></td>
-                                        <td><?php echo number_format($sold); ?></td>
-                                        <td>
-                                            <?php if ($sisa <= 0): ?>
-                                                <span class="badge bg-danger">Habis</span>
-                                            <?php elseif ($sisa <= 10): ?>
-                                                <span class="badge bg-warning"><?php echo number_format($sisa); ?></span>
-                                            <?php else: ?>
-                                                <span class="badge bg-success"><?php echo number_format($sisa); ?></span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <a href="<?php echo base_url('admin/tiket/edit.php?id=' . $ticket['id_tiket']); ?>" 
-                                               class="btn btn-sm btn-warning">
-                                                <i class="bi bi-pencil"></i> Edit
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-danger" 
-                                                    onclick="confirmDelete(<?php echo $ticket['id_tiket']; ?>)">
-                                                <i class="bi bi-trash"></i> Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
-                </div>
-            </div>
-        </main>
+    <?php
+    // Search Filter Component
+    render_search_filter([
+        'placeholder' => 'Cari berdasarkan nama tiket atau event...',
+        'search_value' => $search,
+        'action_url' => '',
+        'method' => 'GET',
+        'show_reset' => true,
+        'reset_url' => 'index.php'
+    ]);
+    ?>
+
+    <?php
+    // Data Table Component
+    render_data_table([
+        'title' => 'Daftar Tiket',
+        'data' => $tickets,
+        'total_count' => $total_tickets,
+        'empty_message' => !empty($search) ? 'Tidak ada tiket yang cocok dengan pencarian' : 'Belum ada data tiket',
+        'empty_icon' => 'bi-ticket-perforated',
+        'columns' => [
+            [
+                'key' => 'id_tiket',
+                'label' => 'ID',
+                'type' => 'badge'
+            ],
+            [
+                'key' => 'nama_tiket',
+                'label' => 'Nama Tiket',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'nama_event',
+                'label' => 'Event',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'tanggal',
+                'label' => 'Tanggal Event',
+                'type' => 'date',
+                'format' => 'd M Y'
+            ],
+            [
+                'key' => 'harga',
+                'label' => 'Harga',
+                'type' => 'text',
+                'format' => 'currency'
+            ],
+            [
+                'key' => 'kuota',
+                'label' => 'Kuota',
+                'type' => 'text',
+                'format' => 'number'
+            ],
+            [
+                'key' => 'sold',
+                'label' => 'Terjual',
+                'type' => 'text',
+                'format' => 'number'
+            ],
+            [
+                'key' => 'status_badge',
+                'label' => 'Sisa',
+                'type' => 'html'
+            ],
+            [
+                'key' => 'actions',
+                'label' => 'Aksi',
+                'type' => 'actions'
+            ]
+        ],
+        'actions' => [
+            [
+                'label' => 'Edit',
+                'icon' => 'bi-pencil',
+                'class' => 'btn btn-sm btn-warning',
+                'type' => 'link',
+                'href' => base_url('admin/tiket/edit.php?id={id}'),
+                'id_key' => 'id_tiket'
+            ],
+            [
+                'label' => 'Hapus',
+                'icon' => 'bi-trash',
+                'class' => 'btn btn-sm btn-danger',
+                'onclick' => 'confirmDelete({id})',
+                'id_key' => 'id_tiket'
+            ]
+        ]
+    ]);
+    ?>
+
+    <?php
+    // Pagination Component
+    render_pagination([
+        'current_page' => $page,
+        'total_pages' => $total_pages,
+        'total_items' => $total_tickets,
+        'per_page' => $per_page,
+        'offset' => $offset,
+        'base_url' => 'index.php',
+        'query_params' => ['search' => $search]
+    ]);
+    ?>
+</main>
 
 
 
 <script>
 function confirmDelete(id) {
     showConfirmation('Apakah Anda yakin ingin menghapus tiket ini?', function() {
-        window.location.href = '<?php echo base_url('admin/tiket/?delete='); ?>' + id;
+        window.location.href = '?delete=' + id;
     }, {isDanger: true});
 }
 </script>

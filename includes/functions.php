@@ -232,29 +232,63 @@ function get_dashboard_stats() {
     
     $stats = [];
     
-    // Total users
+    // Current month and previous month
+    $current_month = date('Y-m');
+    $previous_month = date('Y-m', strtotime('-1 month'));
+    
+    // Total users (current)
     $query = "SELECT COUNT(*) as total FROM users WHERE role = 'user'";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $stats['total_users'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Total orders
+    // Users from previous month
+    $query = "SELECT COUNT(*) as total FROM users WHERE role = 'user' AND DATE_FORMAT(created_at, '%Y-%m') = ?";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$previous_month]);
+    $stats['previous_users'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Total orders (current)
     $query = "SELECT COUNT(*) as total FROM orders WHERE status = 'paid'";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $stats['total_orders'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Total revenue
+    // Orders from previous month
+    $query = "SELECT COUNT(*) as total FROM orders WHERE status = 'paid' AND DATE_FORMAT(tanggal_order, '%Y-%m') = ?";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$previous_month]);
+    $stats['previous_orders'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Total revenue (current)
     $query = "SELECT COALESCE(SUM(total), 0) as total FROM orders WHERE status = 'paid'";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $stats['total_revenue'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // Total events
+    // Revenue from previous month
+    $query = "SELECT COALESCE(SUM(total), 0) as total FROM orders WHERE status = 'paid' AND DATE_FORMAT(tanggal_order, '%Y-%m') = ?";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$previous_month]);
+    $stats['previous_revenue'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Total events (current)
     $query = "SELECT COUNT(*) as total FROM event";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $stats['total_events'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Events from previous month
+    $query = "SELECT COUNT(*) as total FROM event WHERE DATE_FORMAT(created_at, '%Y-%m') = ?";
+    $stmt = $db->prepare($query);
+    $stmt->execute([$previous_month]);
+    $stats['previous_events'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // Calculate percentage changes
+    $stats['users_change'] = $stats['previous_users'] > 0 ? (($stats['total_users'] - $stats['previous_users']) / $stats['previous_users']) * 100 : 0;
+    $stats['orders_change'] = $stats['previous_orders'] > 0 ? (($stats['total_orders'] - $stats['previous_orders']) / $stats['previous_orders']) * 100 : 0;
+    $stats['revenue_change'] = $stats['previous_revenue'] > 0 ? (($stats['total_revenue'] - $stats['previous_revenue']) / $stats['previous_revenue']) * 100 : 0;
+    $stats['events_change'] = $stats['previous_events'] > 0 ? (($stats['total_events'] - $stats['previous_events']) / $stats['previous_events']) * 100 : 0;
     
     return $stats;
 }
@@ -306,5 +340,31 @@ function paginate($total_items, $items_per_page = 10, $current_page = 1) {
         'has_prev' => $current_page > 1,
         'has_next' => $current_page < $total_pages
     ];
+}
+
+// Format currency in short form (100k, 1jt, 1M)
+function format_currency_short($amount) {
+    if ($amount >= 1000000000) {
+        return 'Rp ' . ($amount / 1000000000) . 'M';
+    } elseif ($amount >= 1000000) {
+        return 'Rp ' . ($amount / 1000000) . 'jt';
+    } elseif ($amount >= 1000) {
+        return 'Rp ' . ($amount / 1000) . 'k';
+    } else {
+        return 'Rp ' . $amount;
+    }
+}
+
+// Format number in short form (100k, 1jt, 1M)
+function format_number_short($number) {
+    if ($number >= 1000000000) {
+        return ($number / 1000000000) . 'M';
+    } elseif ($number >= 1000000) {
+        return ($number / 1000000) . 'jt';
+    } elseif ($number >= 1000) {
+        return ($number / 1000) . 'k';
+    } else {
+        return $number;
+    }
 }
 ?>

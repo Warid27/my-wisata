@@ -394,6 +394,12 @@
     padding: 2rem;
     background-color: $neutral-100;
     min-height: calc(100vh - 56px);
+    padding-top: 80px;
+}
+
+// Fixed header spacing for user dashboard
+.container.fixed-header-spacing {
+    padding-top: 80px;
 }
 
 // Page Header

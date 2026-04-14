@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/components/page_header.php';
+require_once __DIR__ . '/../includes/components/search_filter.php';
+require_once __DIR__ . '/../includes/components/data_table.php';
+require_once __DIR__ . '/../includes/components/pagination.php';
 
 require_admin();
 
@@ -19,8 +23,8 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $where = '';
 $params = [];
 if (!empty($search)) {
-    $where = "WHERE nama LIKE ? OR email LIKE ? OR no_telp LIKE ?";
-    $params = ["%$search%", "%$search%", "%$search%"];
+    $where = "WHERE nama LIKE ? OR email LIKE ?";
+    $params = ["%$search%", "%$search%"];
 }
 
 // Get total users
@@ -36,6 +40,11 @@ $stmt = $db->prepare($query);
 $stmt->execute($params);
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Add subtitle for current user
+foreach ($users as &$user) {
+    $user['is_current_user'] = ($user['id_user'] == ($_SESSION['user_id'] ?? 0)) ? '(Anda)' : '';
+}
+
 include __DIR__ . '/../includes/header.php';
 ?>
 
@@ -44,158 +53,107 @@ include __DIR__ . '/../includes/header.php';
 
 <!-- Main content -->
 <main role="main" class="main-content">
-    <!-- Page Header -->
-    <div class="page-header d-flex justify-content-between align-items-center">
-        <div>
-            <h1 class="page-title">Manajemen Users</h1>
-            <p class="page-subtitle">Kelola data pengguna aplikasi</p>
-        </div>
-        <div class="page-actions">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                <i class="bi bi-plus-circle me-2"></i>Tambah User
-            </button>
-        </div>
-    </div>
+    <?php
+    // Page Header Component
+    render_page_header([
+        'title' => 'Manajemen Users',
+        'subtitle' => 'Kelola data pengguna aplikasi',
+        'actions' => [
+            [
+                'label' => 'Tambah User',
+                'icon' => 'bi-plus-circle',
+                'class' => 'btn-primary',
+                'modal' => '#addUserModal'
+            ]
+        ]
+    ]);
+    ?>
 
-    <!-- Search and Filter -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" action="">
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <input type="text" class="form-control" name="search"
-                                placeholder="Cari berdasarkan nama, email, atau nomor telepon..."
-                                value="<?php echo htmlspecialchars($search); ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-outline-primary me-2">
-                                <i class="bi bi-search"></i> Cari
-                            </button>
-                            <?php if (!empty($search)): ?>
-                                <a href="users.php" class="btn btn-outline-secondary">
-                                    <i class="bi bi-x-circle"></i> Reset
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    <?php
+    // Search Filter Component
+    render_search_filter([
+        'placeholder' => 'Cari berdasarkan nama atau email...',
+        'search_value' => $search,
+        'action_url' => '',
+        'method' => 'GET',
+        'show_reset' => true,
+        'reset_url' => 'users.php'
+    ]);
+    ?>
 
-    <!-- Users Table -->
-    <div class="card data-table">
-        <div class="card-header bg-white border-0 pt-4 pb-3">
-            <h6 class="card-title mb-0">Daftar Users</h6>
-            <small class="text-muted">Total <?php echo number_format($total_users); ?> pengguna</small>
-        </div>
-        <div class="card-body p-0">
-            <?php if (empty($users)): ?>
-                <div class="text-center py-4">
-                    <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
-                    <p class="text-muted mt-2">
-                        <?php echo !empty($search) ? 'Tidak ada user yang cocok dengan pencarian' : 'Belum ada user'; ?>
-                    </p>
-                </div>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>No. Telepon</th>
-                                <th>Tanggal Daftar</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($users as $user): ?>
-                                <tr>
-                                    <td>
-                                        <span class="badge bg-light text-dark">#<?php echo $user['id_user']; ?></span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="user-avatar-sm bg-primary-light text-primary me-2">
-                                                <i class="bi bi-person"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-semibold"><?php echo htmlspecialchars($user['nama']); ?></div>
-                                                <?php if ($user['id_user'] == $_SESSION['user_id']): ?>
-                                                    <small class="text-muted">(Anda)</small>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                    <td><?php echo htmlspecialchars($user['no_telp'] ?? '-'); ?></td>
-                                    <td>
-                                        <small><?php echo date('d M Y', strtotime($user['created_at'])); ?></small>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                onclick="editUser(<?php echo $user['id_user']; ?>)">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <?php if ($user['id_user'] != $_SESSION['user_id']): ?>
-                                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="deleteUser(<?php echo $user['id_user']; ?>)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <?php if ($total_pages > 1): ?>
-                    <div class="d-flex justify-content-between align-items-center p-3">
-                        <small class="text-muted">
-                            Menampilkan <?php echo $offset + 1; ?> - <?php echo min($offset + $per_page, $total_users); ?>
-                            dari <?php echo $total_users; ?> data
-                        </small>
-                        <nav>
-                            <ul class="pagination mb-0">
-                                <?php if ($page > 1): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                <?php endif; ?>
-
-                                <?php for ($i = max(1, $page - 2); $i <= min($page + 2, $total_pages); $i++): ?>
-                                    <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                                        <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>">
-                                            <?php echo $i; ?>
-                                        </a>
-                                    </li>
-                                <?php endfor; ?>
-
-                                <?php if ($page < $total_pages): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                <?php endif; ?>
-                            </ul>
-                        </nav>
-                    </div>
-                <?php endif; ?>
-            <?php endif; ?>
-        </div>
-    </div>
+    <?php
+    // Data Table Component
+    render_data_table([
+        'title' => 'Daftar Users',
+        'data' => $users,
+        'total_count' => $total_users,
+        'empty_message' => !empty($search) ? 'Tidak ada user yang cocok dengan pencarian' : 'Belum ada user',
+        'empty_icon' => 'bi-people',
+        'columns' => [
+            [
+                'key' => 'id_user',
+                'label' => 'ID',
+                'type' => 'badge'
+            ],
+            [
+                'key' => 'nama',
+                'label' => 'Nama',
+                'type' => 'avatar',
+                'subtitle' => 'is_current_user'
+            ],
+            [
+                'key' => 'email',
+                'label' => 'Email',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'created_at',
+                'label' => 'Tanggal Daftar',
+                'type' => 'date',
+                'format' => 'd M Y'
+            ],
+            [
+                'key' => 'actions',
+                'label' => 'Aksi',
+                'type' => 'actions'
+            ]
+        ],
+        'actions' => [
+            [
+                'label' => 'Edit',
+                'icon' => 'bi-pencil',
+                'class' => 'btn btn-sm btn-outline-primary',
+                'onclick' => 'editUser({id})',
+                'id_key' => 'id_user'
+            ],
+            [
+                'label' => 'Hapus',
+                'icon' => 'bi-trash',
+                'class' => 'btn btn-sm btn-outline-danger',
+                'onclick' => 'deleteUser({id})',
+                'id_key' => 'id_user',
+                'condition' => [
+                    'field' => 'id_user',
+                    'operator' => '!=',
+                    'value' => $_SESSION['user_id'] ?? 0
+                ]
+            ]
+        ]
+    ]);
+    ?>
+    
+    <?php
+    // Pagination Component
+    render_pagination([
+        'current_page' => $page,
+        'total_pages' => $total_pages,
+        'total_items' => $total_users,
+        'per_page' => $per_page,
+        'offset' => $offset,
+        'base_url' => 'users.php',
+        'query_params' => ['search' => $search]
+    ]);
+    ?>
 </main>
 
 <!-- Add User Modal -->

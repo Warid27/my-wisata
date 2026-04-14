@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/components/page_header.php';
+require_once __DIR__ . '/../../includes/components/search_filter.php';
+require_once __DIR__ . '/../../includes/components/data_table.php';
+require_once __DIR__ . '/../../includes/components/pagination.php';
 
 require_admin();
 
@@ -33,14 +37,53 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     redirect('admin/event/');
 }
 
-// Get all events with venue
+// Get events with pagination and search
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$per_page = 10;
+$offset = ($page - 1) * $per_page;
+
+// Search functionality
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Build query
+$where = '';
+$params = [];
+if (!empty($search)) {
+    $where = "WHERE e.nama_event LIKE ? OR v.nama_venue LIKE ?";
+    $params = ["%$search%", "%$search%"];
+}
+
+// Get total events
+$count_query = "SELECT COUNT(*) as total FROM event e JOIN venue v ON e.id_venue = v.id_venue $where";
+$stmt = $db->prepare($count_query);
+$stmt->execute($params);
+$total_events = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+$total_pages = ceil($total_events / $per_page);
+
+// Get events list
 $query = "SELECT e.*, v.nama_venue 
           FROM event e 
           JOIN venue v ON e.id_venue = v.id_venue 
-          ORDER BY e.tanggal DESC";
+          $where
+          ORDER BY e.tanggal DESC LIMIT $offset, $per_page";
 $stmt = $db->prepare($query);
-$stmt->execute();
+$stmt->execute($params);
 $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Add status to each event
+foreach ($events as &$event) {
+    $today = date('Y-m-d');
+    if ($event['tanggal'] < $today) {
+        $event['status_badge'] = '<span class="badge bg-secondary">Selesai</span>';
+        $event['status_text'] = 'Selesai';
+    } elseif ($event['tanggal'] == $today) {
+        $event['status_badge'] = '<span class="badge bg-success">Hari Ini</span>';
+        $event['status_text'] = 'Hari Ini';
+    } else {
+        $event['status_badge'] = '<span class="badge bg-primary">Mendatang</span>';
+        $event['status_text'] = 'Mendatang';
+    }
+}
 
 include __DIR__ . '/../../includes/header.php';
 ?>
@@ -50,97 +93,116 @@ include __DIR__ . '/../../includes/header.php';
 
 <!-- Main content -->
 <main role="main" class="main-content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Manajemen Event</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="<?php echo base_url('admin/event/create.php'); ?>" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Tambah Event
-                    </a>
-                </div>
-            </div>
+    <?php
+    // Page Header Component
+    render_page_header([
+        'title' => 'Manajemen Event',
+        'subtitle' => 'Kelola data event dan tiket',
+        'actions' => [
+            [
+                'label' => 'Tambah Event',
+                'icon' => 'bi-plus-circle',
+                'class' => 'btn-primary',
+                'type' => 'link',
+                'href' => base_url('admin/event/create.php')
+            ]
+        ]
+    ]);
+    ?>
 
-            <!-- Event Table -->
-            <div class="card shadow">
-                <div class="card-body">
-                    <?php if (empty($events)): ?>
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Belum ada data event
-                        </div>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama Event</th>
-                                        <th>Tanggal</th>
-                                        <th>Venue</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php $no = 1; foreach ($events as $event): ?>
-                                        <tr>
-                                            <td><?php echo $no++; ?></td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <?php if ($event['gambar']): ?>
-                                                        <img src="<?php echo assets_url('images/' . $event['gambar']); ?>" 
-                                                             alt="<?php echo htmlspecialchars($event['nama_event']); ?>" 
-                                                             class="me-2" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
-                                                    <?php endif; ?>
-                                                    <div>
-                                                        <strong><?php echo htmlspecialchars($event['nama_event']); ?></strong>
-                                                        <?php if ($event['deskripsi']): ?>
-                                                            <br><small class="text-muted"><?php echo substr(htmlspecialchars($event['deskripsi']), 0, 50); ?>...</small>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td><?php echo format_date($event['tanggal']); ?></td>
-                                            <td><?php echo htmlspecialchars($event['nama_venue']); ?></td>
-                                            <td>
-                                                <?php 
-                                                $today = date('Y-m-d');
-                                                if ($event['tanggal'] < $today): ?>
-                                                    <span class="badge bg-secondary">Selesai</span>
-                                                <?php elseif ($event['tanggal'] == $today): ?>
-                                                    <span class="badge bg-success">Hari Ini</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-primary">Mendatang</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <a href="<?php echo base_url('admin/event/edit.php?id=' . $event['id_event']); ?>" 
-                                                   class="btn btn-sm btn-warning">
-                                                    <i class="bi bi-pencil"></i> Edit
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-danger" 
-                                                        onclick="confirmDelete(<?php echo $event['id_event']; ?>)">
-                                                    <i class="bi bi-trash"></i> Hapus
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </main>
-    </div>
-</div>
+    <?php
+    // Search Filter Component
+    render_search_filter([
+        'placeholder' => 'Cari berdasarkan nama event atau venue...',
+        'search_value' => $search,
+        'action_url' => '',
+        'method' => 'GET',
+        'show_reset' => true,
+        'reset_url' => 'index.php'
+    ]);
+    ?>
+
+    <?php
+    // Data Table Component
+    render_data_table([
+        'title' => 'Daftar Event',
+        'data' => $events,
+        'total_count' => $total_events,
+        'empty_message' => !empty($search) ? 'Tidak ada event yang cocok dengan pencarian' : 'Belum ada data event',
+        'empty_icon' => 'bi-calendar-event',
+        'columns' => [
+            [
+                'key' => 'id_event',
+                'label' => 'ID',
+                'type' => 'badge'
+            ],
+            [
+                'key' => 'nama_event',
+                'label' => 'Nama Event',
+                'type' => 'avatar'
+            ],
+            [
+                'key' => 'tanggal',
+                'label' => 'Tanggal',
+                'type' => 'date',
+                'format' => 'd M Y'
+            ],
+            [
+                'key' => 'nama_venue',
+                'label' => 'Venue',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'status_badge',
+                'label' => 'Status',
+                'type' => 'html'
+            ],
+            [
+                'key' => 'actions',
+                'label' => 'Aksi',
+                'type' => 'actions'
+            ]
+        ],
+        'actions' => [
+            [
+                'label' => 'Edit',
+                'icon' => 'bi-pencil',
+                'class' => 'btn btn-sm btn-warning',
+                'type' => 'link',
+                'href' => base_url('admin/event/edit.php?id={id}'),
+                'id_key' => 'id_event'
+            ],
+            [
+                'label' => 'Hapus',
+                'icon' => 'bi-trash',
+                'class' => 'btn btn-sm btn-danger',
+                'onclick' => 'confirmDelete({id})',
+                'id_key' => 'id_event'
+            ]
+        ]
+    ]);
+    ?>
+
+    <?php
+    // Pagination Component
+    render_pagination([
+        'current_page' => $page,
+        'total_pages' => $total_pages,
+        'total_items' => $total_events,
+        'per_page' => $per_page,
+        'offset' => $offset,
+        'base_url' => 'index.php',
+        'query_params' => ['search' => $search]
+    ]);
+    ?>
+</main>
 
 
 
 <script>
 function confirmDelete(id) {
     showConfirmation('Apakah Anda yakin ingin menghapus event ini?', function() {
-        window.location.href = '<?php echo base_url('admin/event/?delete='); ?>' + id;
+        window.location.href = '?delete=' + id;
     }, {isDanger: true});
 }
 </script>
