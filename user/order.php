@@ -25,6 +25,15 @@ $total = array_sum(array_column($cart_items, 'subtotal'));
 $discount = 0;
 $voucher_data = null;
 
+// Load voucher from session if exists
+if (isset($_SESSION['applied_voucher'])) {
+    $voucher_data = $_SESSION['applied_voucher'];
+    $discount = $voucher_data['potongan'];
+    if ($discount > $total) {
+        $discount = $total;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['apply_voucher'])) {
     $kode_voucher = strtoupper(sanitize($_POST['kode_voucher'] ?? ''));
     
@@ -36,8 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['apply_voucher'])) {
             if ($discount > $total) {
                 $discount = $total;
             }
+            $_SESSION['applied_voucher'] = $voucher_data;
             set_flash_message('success', 'Voucher berhasil digunakan! Potongan: ' . format_currency($discount));
         } else {
+            unset($_SESSION['applied_voucher']);
             set_flash_message('error', 'Kode voucher tidak valid atau sudah habis');
         }
     }
@@ -47,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['apply_voucher'])) {
 if (isset($_POST['remove_voucher'])) {
     $voucher_data = null;
     $discount = 0;
+    unset($_SESSION['applied_voucher']);
     set_flash_message('info', 'Voucher dihapus');
 }
 
@@ -96,8 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_order'])) {
         
         $db->commit();
         
-        // Clear cart
+        // Clear cart and voucher
         unset($_SESSION['cart']);
+        unset($_SESSION['applied_voucher']);
         
         // Create Xendit invoice
         error_log("Starting Xendit invoice creation for order: " . $id_order);

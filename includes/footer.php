@@ -38,5 +38,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="<?php echo assets_url('js/script.js'); ?>"></script>
+    <!-- Homepage JS -->
+    <?php 
+    $current_file = basename($_SERVER['PHP_SELF']);
+    if ($current_file === 'index.php' || $_SERVER['REQUEST_URI'] === '/' || 
+        (isset($_GET['p']) && $_GET['p'] === 'home') ||
+        strpos($_SERVER['REQUEST_URI'], '/my-wisata-pecut/') === 0 && strpos($_SERVER['REQUEST_URI'], '.php') === false): 
+    ?>
+    <script src="<?php echo assets_url('js/homepage.js'); ?>"></script>
+    <?php endif; ?>
 </body>
 </html>

@@ -62,6 +62,9 @@ $today_events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 include __DIR__ . '/../includes/header.php';
 ?>
 
+<!-- HTML5-QRCode Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
 <!-- Sidebar -->
 <?php include __DIR__ . '/../includes/admin_sidebar.php'; ?>
 
@@ -78,139 +81,78 @@ include __DIR__ . '/../includes/header.php';
     <!-- Check-in Form -->
     <div class="row mb-4">
         <div class="col-lg-6">
-                    <div class="card shadow">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-qr-code-scan"></i> Scan / Input Kode Tiket
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <form method="POST" id="checkinForm">
-                                <div class="mb-3">
-                                    <label for="kode_tiket" class="form-label">Kode Tiket</label>
-                                    <div class="input-group input-group-lg">
-                                        <input type="text" class="form-control" id="kode_tiket" name="kode_tiket" 
-                                               placeholder="Masukkan atau scan kode tiket" 
-                                               style="text-transform: uppercase;" 
-                                               autofocus required>
-                                        <button type="submit" name="checkin_code" class="btn btn-success">
-                                            <i class="bi bi-check-circle"></i> Check-in
-                                        </button>
-                                    </div>
-                                    <div class="form-text">
-                                        <i class="bi bi-info-circle"></i> 
-                                        Gunakan scanner QR code atau ketik kode tiket manual
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Today's Events -->
-                <div class="col-lg-6">
-                    <div class="card shadow">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-calendar-check"></i> Event Hari Ini
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <?php if (empty($today_events)): ?>
-                                <p class="text-muted">Tidak ada event hari ini</p>
-                            <?php else: ?>
-                                <?php foreach ($today_events as $event): ?>
-                                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                                        <div>
-                                            <strong><?php echo htmlspecialchars($event['nama_event']); ?></strong>
-                                            <br>
-                                            <small class="text-muted">
-                                                Check-in: <?php echo $event['checked_in']; ?> / <?php echo $event['total_checkins']; ?>
-                                            </small>
-                                        </div>
-                                        <div class="text-end">
-                                            <?php $percentage = $event['total_checkins'] > 0 ? ($event['checked_in'] / $event['total_checkins']) * 100 : 0; ?>
-                                            <span class="badge bg-<?php echo $percentage >= 80 ? 'success' : ($percentage >= 50 ? 'warning' : 'secondary'); ?>">
-                                                <?php echo number_format($percentage, 1); ?>%
-                                            </span>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Check-ins -->
             <div class="card shadow">
-                <div class="card-header">
+                <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
-                        <i class="bi bi-clock-history"></i> Check-in Terbaru
+                        <i class="bi bi-qr-code-scan"></i> Scan / Input Kode Tiket
                     </h5>
                 </div>
                 <div class="card-body">
-                    <?php if (empty($recent_checkins)): ?>
-                        <p class="text-muted">Belum ada check-in hari ini</p>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Waktu</th>
-                                        <th>Kode Tiket</th>
-                                        <th>Event</th>
-                                        <th>Pengunjung</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($recent_checkins as $checkin): ?>
-                                        <tr>
-                                            <td><?php echo format_date($checkin['waktu_checkin'], 'H:i:s'); ?></td>
-                                            <td>
-                                                <code class="ticket-code"><?php echo htmlspecialchars($checkin['kode_tiket']); ?></code>
-                                            </td>
-                                            <td><?php echo htmlspecialchars($checkin['nama_event']); ?></td>
-                                            <td><?php echo htmlspecialchars($checkin['nama_user']); ?></td>
-                                            <td>
-                                                <span class="badge bg-success">
-                                                    <i class="bi bi-check-circle"></i> Sudah
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
+                    <!-- Scan Mode Toggle -->
+                    <div class="btn-group w-100 mb-3" role="group">
+                        <input type="radio" class="btn-check" name="scanMode" id="manualMode" autocomplete="off" checked>
+                        <label class="btn btn-outline-secondary" for="manualMode">
+                            <i class="bi bi-keyboard"></i> Manual
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="scanMode" id="cameraMode" autocomplete="off">
+                        <label class="btn btn-outline-success" for="cameraMode">
+                            <i class="bi bi-camera"></i> Kamera
+                        </label>
+                    </div>
+                    
+                    <!-- Manual Input Form -->
+                    <div id="manualInput">
+                        <form method="POST" id="checkinForm">
+                            <div class="mb-3">
+                                <label for="kode_tiket" class="form-label">Kode Tiket</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="text" class="form-control" id="kode_tiket" name="kode_tiket" 
+                                           placeholder="Masukkan kode tiket" 
+                                           style="text-transform: uppercase;" 
+                                           autofocus required>
+                                    <button type="submit" name="checkin_code" class="btn btn-success">
+                                        <i class="bi bi-check-circle"></i> Check-in
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Ketik kode tiket manual atau gunakan scanner kamera
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Camera Scanner Component -->
+                    <?php include __DIR__ . '/../includes/components/camera_scanner.php'; ?>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <!-- Today's Events Component -->
+        <div class="col-lg-6">
+            <?php 
+            $events = $today_events;
+            include __DIR__ . '/../includes/components/today_events.php';
+            ?>
+        </div>
     </div>
-</div>
 
+    <!-- Recent Check-ins Component -->
+    <div class="row">
+        <div class="col-12">
+            <?php 
+            $checkins = $recent_checkins;
+            include __DIR__ . '/../includes/components/recent_checkins.php';
+            ?>
+        </div>
+    </div>
+</main>
 
+<!-- Confirmation Modal Component -->
+<?php include __DIR__ . '/../includes/components/confirmation_modal.php'; ?>
 
-<script>
-// Auto-focus on kode_tiket input
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('kode_tiket').focus();
-    
-    // Clear input after successful check-in
-    <?php if (has_flash_message('success')): ?>
-        document.getElementById('kode_tiket').value = '';
-        document.getElementById('kode_tiket').focus();
-    <?php endif; ?>
-});
-
-// Handle Enter key for quick check-in
-document.getElementById('checkinForm').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        this.submit();
-    }
-});
-</script>
+<!-- Camera Scanner JavaScript -->
+<script src="../assets/js/camera-scanner.js"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

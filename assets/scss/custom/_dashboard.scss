@@ -366,26 +366,123 @@
     }
 }
 
+// Mobile Overlay
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Use background instead of background-color */
+    z-index: 1029;
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    
+    &.show {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
 // Responsive adjustments
 @media (max-width: 768px) {
     .sidebar {
+        -webkit-transform: translateX(-100%);
+        -moz-transform: translateX(-100%);
+        -ms-transform: translateX(-100%);
+        -o-transform: translateX(-100%);
         transform: translateX(-100%);
+        width: 280px !important; // Force full width on mobile
+        z-index: 1030;
+        -webkit-transition: -webkit-transform 0.3s ease;
+        -moz-transition: -moz-transform 0.3s ease;
+        -o-transition: -o-transform 0.3s ease;
+        transition: transform 0.3s ease;
+        
+        &.mobile-open {
+            -webkit-transform: translateX(0);
+            -moz-transform: translateX(0);
+            -ms-transform: translateX(0);
+            -o-transform: translateX(0);
+            transform: translateX(0);
+            -webkit-box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            -moz-box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        }
         
         &.collapsed {
-            transform: translateX(0);
+            // Don't apply collapsed styles on mobile
+            -webkit-transform: translateX(-100%);
+            -moz-transform: translateX(-100%);
+            -ms-transform: translateX(-100%);
+            -o-transform: translateX(-100%);
+            transform: translateX(-100%);
+            
+            &.mobile-open {
+                -webkit-transform: translateX(0);
+                -moz-transform: translateX(0);
+                -ms-transform: translateX(0);
+                -o-transform: translateX(0);
+                transform: translateX(0);
+            }
+        }
+        
+        // Ensure brand text and nav text are visible on mobile
+        .brand-text,
+        .nav-text,
+        .nav-section-title,
+        .user-info,
+        .sidebar-footer {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .sidebar-brand {
+            padding: 2rem 1.5rem !important;
+        }
+        
+        .nav-link {
+            padding: 0.875rem 1.5rem !important;
+            justify-content: flex-start !important;
+            
+            .nav-icon {
+                margin-right: 1rem !important;
+            }
         }
     }
     
     .main-content {
-        margin-left: 0;
+        margin-left: 0 !important;
+        padding-top: 80px; // Account for fixed navbar
         
         &.expanded {
-            margin-left: 0;
+            margin-left: 0 !important;
         }
     }
     
     .sidebar-toggle {
         display: block;
+        top: 80px; // Position below navbar
+        background-color: var(--bs-primary);
+        z-index: 1031;
+        
+        &:hover {
+            background-color: darken($primary-color, 10%);
+        }
+    }
+    
+    // Adjust navbar for mobile
+    #main-navbar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 1020 !important;
     }
 }
 

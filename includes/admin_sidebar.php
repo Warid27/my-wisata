@@ -139,33 +139,111 @@ function is_menu_active($page, $current, $uri = '') {
     </button>
 </nav>
 
+<!-- Overlay for mobile sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <!-- Sidebar JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Sidebar toggle for mobile
     const toggleBtn = document.querySelector('.sidebar-toggle');
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
+    const overlay = document.getElementById('sidebarOverlay');
     
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', function() {
+    // Check if we're on mobile
+    function isMobile() {
+        return window.innerWidth < 768;
+    }
+    
+    // Toggle sidebar (mobile)
+    function toggleSidebar() {
+        if (isMobile()) {
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('show');
+            
+            // Prevent body scroll when sidebar is open
+            if (sidebar.classList.contains('mobile-open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        } else {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
+        }
+    }
+    
+    // Close sidebar (mobile)
+    function closeSidebar() {
+        if (isMobile()) {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }
+    
+    // Toggle button click
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleSidebar);
+    }
+    
+    // Overlay click to close
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+    
+    // Close sidebar when clicking on a link (mobile)
+    const navLinks = sidebar.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (isMobile()) {
+                setTimeout(closeSidebar, 300); // Small delay for navigation
+            }
         });
-    }
-
-    // Auto-collapse on mobile
-    if (window.innerWidth < 768) {
-        sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
-    }
-
+    });
+    
     // Handle window resize
+    let resizeTimer;
     window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768) {
-            sidebar.classList.remove('collapsed');
-            mainContent.classList.remove('expanded');
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            if (!isMobile()) {
+                // Reset mobile states when switching to desktop
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }, 250);
+    });
+    
+    // Initial state - sidebar is hidden by default on mobile
+    // No need to add mobile-closed class as it conflicts with mobile-open
+    
+    // Handle ESC key to close sidebar
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('mobile-open')) {
+            closeSidebar();
         }
     });
+    
+    // Touch/swipe support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    sidebar.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    
+    sidebar.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, false);
+    
+    function handleSwipe() {
+        // Swipe left to close
+        if (touchEndX < touchStartX - 50 && isMobile()) {
+            closeSidebar();
+        }
+    }
 });
 </script>

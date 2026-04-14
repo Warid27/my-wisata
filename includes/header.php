@@ -17,6 +17,13 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary" id="main-navbar">
         <div class="container-fluid">
+            <!-- Mobile sidebar toggle button for admin pages -->
+            <?php if (strpos($_SERVER['REQUEST_URI'], '/admin') !== false): ?>
+            <button class="navbar-toggler me-2 d-lg-none" type="button" id="mobileSidebarToggle">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+            <?php endif; ?>
+            
             <a class="navbar-brand" href="<?php echo base_url(); ?>">
                 <i class="bi bi-ticket-perforated"></i> <?php echo SITE_NAME; ?>
             </a>
@@ -82,6 +89,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const navbar = document.getElementById('main-navbar');
     const sidebar = document.querySelector('.sidebar');
+    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
     
     // Check if sidebar exists on the page
     if (sidebar) {
@@ -92,12 +100,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Function to update navbar position
         function updateNavbarPosition() {
-            if (sidebar.classList.contains('collapsed')) {
-                navbar.style.left = '80px';
-                navbar.style.width = 'calc(100% - 80px)';
+            if (window.innerWidth >= 768) {
+                if (sidebar.classList.contains('collapsed')) {
+                    navbar.style.left = '80px';
+                    navbar.style.width = 'calc(100% - 80px)';
+                } else {
+                    navbar.style.left = '280px';
+                    navbar.style.width = 'calc(100% - 280px)';
+                }
             } else {
-                navbar.style.left = '280px';
-                navbar.style.width = 'calc(100% - 280px)';
+                // Mobile view - navbar takes full width
+                navbar.style.left = '0';
+                navbar.style.width = '100%';
             }
         }
         
@@ -117,19 +131,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Handle window resize
         window.addEventListener('resize', function() {
-            if (window.innerWidth < 768) {
-                // Mobile view - navbar takes full width
-                navbar.style.left = '0';
-                navbar.style.width = '100%';
-            } else {
-                updateNavbarPosition();
-            }
+            updateNavbarPosition();
         });
         
-        // Initial check for mobile
-        if (window.innerWidth < 768) {
-            navbar.style.left = '0';
-            navbar.style.width = '100%';
+        // Mobile sidebar toggle
+        if (mobileSidebarToggle) {
+            mobileSidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('mobile-open');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (overlay) {
+                    overlay.classList.toggle('show');
+                }
+                
+                // Prevent body scroll when sidebar is open
+                if (sidebar.classList.contains('mobile-open')) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            });
         }
     }
     // If no sidebar exists, navbar remains as normal (static positioning)
