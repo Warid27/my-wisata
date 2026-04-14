@@ -1,0 +1,87 @@
+// Utility Classes and Animations
+
+// Animations
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+// Loading Spinner
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid $tertiary-color;
+    border-top: 4px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+// Custom Scrollbar
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: $tertiary-color;
+}
+
+::-webkit-scrollbar-thumb {
+    background: $primary-color;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: darken($primary-color, 10%);
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
+
+// Print Styles
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid $border-color;
+    }
+    
+    .btn {
+        display: none;
+    }
+}

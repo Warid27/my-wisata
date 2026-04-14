@@ -1,0 +1,245 @@
+// Custom Component Styles
+
+// Navigation
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
+
+    .navbar-nav .nav-link {
+        font-weight: 500;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        margin: 0 0.25rem;
+
+        &:hover {
+            background-color: $primary-color;
+            color: $secondary-color !important;
+        }
+
+        &.active {
+            background-color: $primary-color;
+            color: $secondary-color !important;
+        }
+    }
+
+    .navbar-toggler {
+        border-color: $border-color;
+
+        &:focus {
+            box-shadow: 0 0 0 0.2rem rgba(144, 238, 144, 0.25);
+        }
+    }
+}
+
+// Cards
+.card {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 64, 64, 0.08);
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 64, 64, 0.15);
+        border-color: $primary-color;
+    }
+
+    .card-title {
+        color: $secondary-color;
+    }
+
+    .card-text {
+        color: $neutral-700;
+    }
+}
+
+// Event Cards
+.event-card {
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 12px;
+
+    .card-img-top {
+        transition: transform 0.3s ease;
+    }
+
+    &:hover .card-img-top {
+        transform: scale(1.05);
+    }
+}
+
+// Buttons
+.btn {
+    transition: all 0.3s ease;
+
+    &-primary {
+        &:hover {
+            background-color: darken($secondary-color, 5%);
+            border-color: darken($secondary-color, 5%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 64, 64, 0.3);
+        }
+    }
+
+    &-secondary {
+        &:hover {
+            background-color: darken($primary-color, 10%);
+            border-color: darken($primary-color, 10%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(144, 238, 144, 0.3);
+            color: $secondary-color;
+        }
+    }
+
+    &-success {
+        &:hover {
+            background-color: darken($success, 10%);
+            border-color: darken($success, 10%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+        }
+    }
+
+    &-danger {
+        &:hover {
+            background-color: darken($danger, 10%);
+            border-color: darken($danger, 10%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+    }
+
+    &-warning {
+        &:hover {
+            background-color: darken($warning, 5%);
+            border-color: darken($warning, 5%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+            color: $neutral-900;
+        }
+    }
+
+    &-accent {
+        background-color: $accent-color;
+        border-color: $accent-color;
+        color: $neutral-100;
+
+        &:hover {
+            background-color: darken($accent-color, 5%);
+            border-color: darken($accent-color, 5%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 127, 80, 0.3);
+            color: $neutral-100;
+        }
+    }
+}
+
+// Forms
+.form-control,
+.form-select {
+    transition: all 0.3s ease;
+    color: $body-color;
+
+    &::placeholder {
+        color: $neutral-600;
+    }
+
+    &:focus {
+        background-color: $input-bg;
+        color: $body-color;
+    }
+}
+
+.form-label {
+    color: $body-color;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    color: $neutral-600;
+    font-size: 0.875em;
+}
+
+.input-group-text {
+    background-color: $tertiary-color;
+    border-color: $border-color;
+    color: $body-color;
+}
+
+// Tables
+.table {
+    tbody td {
+        border-color: $border-color;
+        color: $neutral-700;
+    }
+}
+
+// Badges
+.badge {
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+// Alerts
+.alert {
+    font-weight: 500;
+
+    &-primary {
+        background-color: rgba($secondary-color, 0.1);
+        color: $secondary-color;
+        border-left: 4px solid $secondary-color;
+    }
+
+    &-secondary {
+        background-color: rgba($primary-color, 0.1);
+        color: $secondary-color;
+        border-left: 4px solid $primary-color;
+    }
+
+    &-success {
+        background-color: rgba($success, 0.1);
+        color: $success;
+        border-left: 4px solid $success;
+    }
+
+    &-danger {
+        background-color: rgba($danger, 0.1);
+        color: $danger;
+        border-left: 4px solid $danger;
+    }
+
+    &-warning {
+        background-color: rgba($warning, 0.1);
+        color: darken($warning, 20%);
+        border-left: 4px solid $warning;
+    }
+
+    &-info {
+        background-color: rgba($info, 0.1);
+        color: darken($info, 15%);
+        border-left: 4px solid $info;
+    }
+
+    &-light {
+        background-color: $tertiary-color;
+        color: $body-color;
+        border-left: 4px solid $border-color;
+    }
+}
+
+// Ticket Code Display
+.ticket-code {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1em;
+    background: linear-gradient(135deg, $tertiary-color 0%, $neutral-200 100%);
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 2px dashed $primary-color;
+    letter-spacing: 1px;
+    color: $body-color;
+}

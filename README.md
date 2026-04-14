@@ -69,7 +69,7 @@ my-wisata-pecut/
 │   ├── auth.php           # Authentication middleware
 │   └── functions.php      # Helper functions
 ├── admin/                 # Admin panel
-│   ├── index.php          # Admin dashboard
+│   ├──           # Admin dashboard
 │   ├── venue/             # Venue management
 │   ├── event/             # Event management
 │   ├── tiket/             # Ticket management
@@ -79,7 +79,7 @@ my-wisata-pecut/
 │   ├── reports.php        # Sales reports
 │   └── hots_analysis.php  # HOTS analysis
 ├── user/                  # User panel
-│   ├── index.php          # User dashboard
+│   ├──           # User dashboard
 │   ├── login.php          # User login
 │   ├── register.php       # User registration
 │   ├── events.php         # Event listing
@@ -96,7 +96,7 @@ my-wisata-pecut/
 │   └── images/            # Event images
 ├── sql/                   # Database scripts
 │   └── database.sql       # Database schema
-├── index.php              # Landing page
+├──               # Landing page
 └── logout.php             # Logout handler
 ```
 
@@ -194,7 +194,7 @@ For issues or questions:
 
 ## Changelog
 
-### Version 1.0.0 (2024-04-14)
+### Version 1.0.0 (2026-04-14)
 - Initial release with all core features
 - Complete CRUD operations
 - Booking and payment system
@@ -202,3 +202,37 @@ For issues or questions:
 - HOTS analysis implementation
 - PDF export feature
 - Responsive design implementation
+
+### Version 1.0.1 (2026-10-14)
+- Fixed webhook callback issues
+- Improved error logging
+- Enhanced security measures
+- Better session management
+- Fixed responsive design issues
+
+### Version 1.0.2 (2025-10-15)
+- Enhanced design UI / UX
+
+## Development Workflows
+
+### Update Workflow
+To update the project documentation and code:
+1. Make necessary changes to files
+2. Update README.md with new features or changes
+3. Test the changes locally
+4. Use the push workflow to commit and push changes
+
+### Push Workflow
+Use the `/push` workflow to commit and push changes:
+1. Stages all changes with `git add -A`
+2. Reviews staged changes with `git diff --cached`
+3. Creates a proper commit message following conventional commit format
+4. Commits changes with structured message
+5. Pushes to remote repository
+
+**Important**: Never use `git reset` in any form. If problematic files need to be removed, use `git rm --cached` and add to `.gitignore` instead.
+
+### Commit Message Format
+- Subject line: max 50 characters, imperative mood, no period
+- Body: explain what and why, wrapped at 72 characters
+- Use conventional commit prefixes: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `style:`

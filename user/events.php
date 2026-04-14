@@ -179,15 +179,4 @@ include __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 </div>
 
-<style>
-.event-card {
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-}
-.event-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-</style>
-
 <?php include __DIR__ . '/../includes/footer.php'; ?>

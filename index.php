@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/includes/functions.php';
 
-$page_title = 'Event Ticket Booking System';
+$page_title = 'MyWisata';
 
 // Get featured events (upcoming events)
 $query = "SELECT e.*, v.nama_venue, COUNT(t.id_tiket) as total_tiket_types,
@@ -28,7 +28,7 @@ include __DIR__ . '/includes/header.php';
             <div class="col-lg-6">
                 <h1 class="display-4 fw-bold mb-4">
                     <i class="bi bi-ticket-perforated"></i> 
-                    Event Ticket Booking System
+                    MyWisata
                 </h1>
                 <p class="lead mb-4">
                     Temukan dan beli tiket untuk event favorit Anda dengan mudah dan aman. 
@@ -40,7 +40,7 @@ include __DIR__ . '/includes/header.php';
                             <i class="bi bi-calendar-event"></i> Jelajahi Event
                         </a>
                         <?php if (is_admin()): ?>
-                            <a href="<?php echo base_url('admin/index.php'); ?>" class="btn btn-outline-light btn-lg">
+                            <a href="<?php echo base_url('admin/'); ?>" class="btn btn-outline-light btn-lg">
                                 <i class="bi bi-speedometer2"></i> Dashboard Admin
                             </a>
                         <?php else: ?>
@@ -183,32 +183,5 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<style>
-.hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.feature-card {
-    padding: 2rem;
-    transition: transform 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-10px);
-}
-
-.event-card {
-    transition: all 0.3s ease;
-}
-
-.event-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-.cta-section {
-    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
-}
-</style>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

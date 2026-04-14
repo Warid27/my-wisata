@@ -7,9 +7,9 @@ $page_title = 'Login';
 // If already logged in, redirect to appropriate dashboard
 if (is_logged_in()) {
     if (is_admin()) {
-        redirect('admin/index.php');
+        redirect('admin/');
     } else {
-        redirect('user/index.php');
+        redirect('user/');
     }
 }
 
@@ -38,9 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Redirect based on role
             if ($user['role'] === 'admin') {
-                redirect('admin/index.php');
+                redirect('admin/');
             } else {
-                redirect('user/index.php');
+                redirect('user/');
             }
         } else {
             set_flash_message('error', 'Email atau password salah');

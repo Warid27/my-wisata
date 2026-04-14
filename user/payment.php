@@ -16,7 +16,7 @@ $page_title = 'Pembayaran';
 $id_order = $_GET['order'] ?? 0;
 if (!is_numeric($id_order)) {
     set_flash_message('error', 'ID order tidak valid');
-    redirect('user/index.php');
+    redirect('user/');
 }
 
 // Get order details
@@ -31,7 +31,7 @@ $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$order) {
     set_flash_message('error', 'Order tidak ditemukan');
-    redirect('user/index.php');
+    redirect('user/');
 }
 
 // Get order items

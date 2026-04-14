@@ -9,14 +9,14 @@ if (!is_logged_in()) {
 function require_admin() {
     if (!is_admin()) {
         set_flash_message('error', 'Akses ditolak. Anda bukan admin');
-        redirect('user/index.php');
+        redirect('user/');
     }
 }
 
 function require_user() {
     if (is_admin()) {
         set_flash_message('info', 'Admin tidak dapat mengakses halaman user');
-        redirect('admin/index.php');
+        redirect('admin/');
     }
 }
 ?>

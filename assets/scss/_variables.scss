@@ -1,0 +1,82 @@
+// Custom Variables for MyWisata
+
+// Color Scheme
+$primary-color: #90EE90;
+$secondary-color: #004040;
+$tertiary-color: #F0F5F0;
+$accent-color: #FF7F50;
+
+// Neutral colors
+$neutral-100: #ffffff;
+$neutral-200: #f8f9fa;
+$neutral-300: #e9ecef;
+$neutral-400: #dee2e6;
+$neutral-500: #ced4da;
+$neutral-600: #adb5bd;
+$neutral-700: #6c757d;
+$neutral-800: #495057;
+$neutral-900: #343a40;
+
+// Bootstrap Variable Overrides
+$primary: $secondary-color;
+$secondary: $primary-color;
+$success: #198754;
+$info: #0dcaf0;
+$warning: #ffc107;
+$danger: #dc3545;
+$light: $tertiary-color;
+$dark: $secondary-color;
+
+// Body
+$body-bg: $tertiary-color;
+$body-color: $secondary-color;
+
+// Typography
+$font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+// Borders
+$border-radius: 8px;
+$border-radius-lg: 12px;
+$border-color: $neutral-400;
+
+// Cards
+$card-border-color: $border-color;
+$card-bg: $neutral-100;
+$card-cap-bg: $tertiary-color;
+
+// Buttons
+$btn-border-width: 2px;
+$btn-font-weight: 500;
+$btn-padding-y: 8px;
+$btn-padding-x: 20px;
+$btn-padding-y-lg: 12px;
+$btn-padding-x-lg: 28px;
+
+// Forms
+$input-bg: $neutral-100;
+$input-border-color: $border-color;
+$input-focus-border-color: $primary-color;
+$input-focus-box-shadow: 0 0 0 3px rgba(144, 238, 144, 0.25);
+
+// Tables
+$table-bg: $neutral-100;
+$table-border-color: $border-color;
+$table-head-bg: $tertiary-color;
+$table-hover-bg: rgba(144, 238, 144, 0.1);
+$table-striped-bg: rgba(240, 245, 240, 0.5);
+
+// Navbar
+$navbar-light-bg: $neutral-100;
+$navbar-light-color: $secondary-color;
+$navbar-light-hover-color: $secondary-color;
+$navbar-light-active-color: $secondary-color;
+
+// Modals
+$modal-content-bg: $neutral-100;
+$modal-header-bg: $tertiary-color;
+$modal-footer-bg: $tertiary-color;
+
+// Alerts
+$alert-border-width: 0;
+$alert-padding-x: 1rem;
+$alert-padding-y: 0.75rem;

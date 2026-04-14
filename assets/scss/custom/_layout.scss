@@ -1,0 +1,124 @@
+// Layout Styles
+
+// Sidebar
+.sidebar {
+    background: linear-gradient(180deg, $neutral-100 0%, $tertiary-color 100%);
+    border-right: 1px solid $border-color;
+
+    .nav-link {
+        padding: 12px 20px;
+        margin: 2px 10px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        color: $body-color;
+
+        &:hover {
+            background-color: $primary-color;
+            color: $secondary-color;
+        }
+
+        &.active {
+            background-color: $primary-color;
+            color: $secondary-color;
+            font-weight: 600;
+        }
+    }
+
+    .sidebar-heading {
+        color: $neutral-700;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+}
+
+// Dashboard Stats Cards
+.border-left-primary {
+    border-left: 4px solid $secondary-color !important;
+}
+
+.border-left-success {
+    border-left: 4px solid $success !important;
+}
+
+.border-left-info {
+    border-left: 4px solid $info !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid $warning !important;
+}
+
+.border-left-danger {
+    border-left: 4px solid $danger !important;
+}
+
+// Breadcrumb
+.breadcrumb {
+    background-color: $neutral-100;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: $neutral-600;
+    }
+
+    .breadcrumb-item.active {
+        color: $body-color;
+    }
+}
+
+// Pagination
+.page-link {
+    color: $secondary-color;
+    background-color: $neutral-100;
+    border-color: $border-color;
+
+    &:hover {
+        color: $secondary-color;
+        background-color: $primary-color;
+        border-color: $primary-color;
+    }
+}
+
+.page-item.active .page-link {
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+}
+
+// Progress bars
+.progress {
+    background-color: $tertiary-color;
+}
+
+.progress-bar {
+    background-color: $primary-color;
+}
+
+// List group
+.list-group-item {
+    background-color: $neutral-100;
+    border-color: $border-color;
+    color: $body-color;
+}
+
+.list-group-item-action:hover {
+    background-color: $tertiary-color;
+    color: $body-color;
+}
+
+// Modals
+.modal-content {
+    background-color: $neutral-100;
+    color: $body-color;
+}
+
+.modal-header {
+    background-color: $tertiary-color;
+    border-bottom-color: $border-color;
+}
+
+.modal-footer {
+    background-color: $tertiary-color;
+    border-top-color: $border-color;
+}

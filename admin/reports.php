@@ -59,51 +59,23 @@ foreach ($payment_stats as $stat) {
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo base_url('admin/index.php'); ?>">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                            <span>Transaksi</span>
-                        </h6>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo base_url('admin/orders.php'); ?>">
-                            <i class="bi bi-cart"></i> Pesanan
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo base_url('admin/checkin.php'); ?>">
-                            <i class="bi bi-qr-code"></i> Check-in
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="<?php echo base_url('admin/reports.php'); ?>">
-                            <i class="bi bi-graph-up"></i> Laporan
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+<!-- Sidebar -->
+<?php include __DIR__ . '/../includes/admin_sidebar.php'; ?>
 
-        <!-- Main content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Laporan Penjualan</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <button type="button" class="btn btn-success" onclick="exportReport()">
-                        <i class="bi bi-download"></i> Export Excel
-                    </button>
-                </div>
-            </div>
+<!-- Main content -->
+<main role="main" class="main-content">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Laporan Penjualan</h1>
+            <p class="page-subtitle">Analisis penjualan dan statistik</p>
+        </div>
+        <div class="page-actions">
+            <button type="button" class="btn btn-secondary" onclick="exportReport()">
+                <i class="bi bi-download me-2"></i>Export Excel
+            </button>
+        </div>
+    </div>
 
             <!-- Date Filter -->
             <div class="card shadow mb-4">
@@ -303,51 +275,6 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<style>
-.sidebar {
-    position: fixed;
-    top: 56px;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-}
-.sidebar-heading {
-    font-size: .75rem;
-    text-transform: uppercase;
-}
-.nav-link {
-    font-weight: 500;
-    color: #333;
-}
-.nav-link:hover {
-    color: #007bff;
-}
-.nav-link.active {
-    color: #007bff;
-}
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
-}
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
-}
-.border-left-info {
-    border-left: 0.25rem solid #36b9cc !important;
-}
-.border-left-warning {
-    border-left: 0.25rem solid #f6c23e !important;
-}
-@media (min-width: 768px) {
-    .sidebar {
-        width: 240px;
-    }
-    main {
-        margin-left: 240px;
-    }
-}
-</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>

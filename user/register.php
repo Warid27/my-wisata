@@ -7,9 +7,9 @@ $page_title = 'Register';
 // If already logged in, redirect to appropriate dashboard
 if (is_logged_in()) {
     if (is_admin()) {
-        redirect('admin/index.php');
+        redirect('admin/');
     } else {
-        redirect('user/index.php');
+        redirect('user/');
     }
 }
 

@@ -3,3 +3,6 @@ sdd.md
 assets/images/*
 config/config.php
 config/database.php
+node_modules/
+package-lock.json
+pnpm-lock.yaml

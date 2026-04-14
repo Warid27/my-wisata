@@ -1,0 +1,15 @@
+{
+  "name": "mywisata",
+  "version": "1.0.0",
+  "description": "Event Ticket Booking System",
+  "scripts": {
+    "build-css": "sass --load-path=node_modules assets/scss/main.scss assets/css/style.css --style=compressed",
+    "watch-css": "sass --load-path=node_modules --watch assets/scss/main.scss assets/css/style.css"
+  },
+  "devDependencies": {
+    "sass": "^1.69.5"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8"
+  }
+}

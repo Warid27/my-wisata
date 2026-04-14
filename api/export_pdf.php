@@ -129,7 +129,7 @@ if ($type === 'sales') {
         
         <div class="footer">
             <p>Laporan ini dihasilkan pada ' . date('d M Y H:i:s') . '</p>
-            <p>© ' . date('Y') . ' Event Ticket Booking System</p>
+            <p>© ' . date('Y') . ' MyWisata</p>
         </div>
     </body>
     </html>';
@@ -141,11 +141,20 @@ if ($type === 'sales') {
     
     // Generate PDF using DOMPDF (if available) or simple HTML
     if (class_exists('Dompdf\Dompdf')) {
-        $dompdf = new Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        $dompdf->stream('Laporan_Penjualan_' . $date_from . '_s_d_' . $date_to . '.pdf');
+        try {
+            /** @var \Dompdf\Dompdf $dompdf */
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            $dompdf->stream('Laporan_Penjualan_' . $date_from . '_s_d_' . $date_to . '.pdf');
+        } catch (Exception $e) {
+            echo '<div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin-bottom: 20px; border-radius: 4px;">';
+            echo '<strong>Error:</strong> Failed to generate PDF: ' . htmlspecialchars($e->getMessage());
+            echo '</div>';
+            echo $html;
+            echo '<script>window.print();</script>';
+        }
     } else {
         // Fallback: Display HTML with print button and installation notice
         echo '<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 20px; border-radius: 4px;">';

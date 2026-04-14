@@ -72,50 +72,22 @@ if (isset($_POST['update_status']) && is_numeric($_POST['order_id'])) {
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo base_url('admin/index.php'); ?>">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                            <span>Transaksi</span>
-                        </h6>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="<?php echo base_url('admin/orders.php'); ?>">
-                            <i class="bi bi-cart"></i> Pesanan
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo base_url('admin/checkin.php'); ?>">
-                            <i class="bi bi-qr-code"></i> Check-in
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo base_url('admin/reports.php'); ?>">
-                            <i class="bi bi-graph-up"></i> Laporan
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+<!-- Sidebar -->
+<?php include __DIR__ . '/../includes/admin_sidebar.php'; ?>
 
-        <!-- Main content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Manajemen Pesanan</h1>
-            </div>
+<!-- Main content -->
+<main role="main" class="main-content">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Manajemen Pesanan</h1>
+            <p class="page-subtitle">Kelola semua pesanan tiket</p>
+        </div>
+    </div>
 
-            <!-- Filters -->
-            <div class="card shadow mb-4">
-                <div class="card-body">
+    <!-- Filter Card -->
+    <div class="card mb-4">
+        <div class="card-body">
                     <form method="GET" class="row g-3">
                         <div class="col-md-3">
                             <select class="form-select" name="status">
@@ -255,39 +227,7 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<style>
-.sidebar {
-    position: fixed;
-    top: 56px;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-}
-.sidebar-heading {
-    font-size: .75rem;
-    text-transform: uppercase;
-}
-.nav-link {
-    font-weight: 500;
-    color: #333;
-}
-.nav-link:hover {
-    color: #007bff;
-}
-.nav-link.active {
-    color: #007bff;
-}
-@media (min-width: 768px) {
-    .sidebar {
-        width: 240px;
-    }
-    main {
-        margin-left: 240px;
-    }
-}
-</style>
+
 
 <script>
 function showOrderDetail(orderId) {

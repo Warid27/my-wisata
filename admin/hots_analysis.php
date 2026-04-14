@@ -104,7 +104,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="position-sticky pt-3">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo base_url('admin/index.php'); ?>">
+                        <a class="nav-link" href="<?php echo base_url('admin/'); ?>">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
@@ -358,38 +358,6 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<style>
-.sidebar {
-    position: fixed;
-    top: 56px;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-}
-.sidebar-heading {
-    font-size: .75rem;
-    text-transform: uppercase;
-}
-.nav-link {
-    font-weight: 500;
-    color: #333;
-}
-.nav-link:hover {
-    color: #007bff;
-}
-.nav-link.active {
-    color: #007bff;
-}
-@media (min-width: 768px) {
-    .sidebar {
-        width: 240px;
-    }
-    main {
-        margin-left: 240px;
-    }
-}
-</style>
+
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
