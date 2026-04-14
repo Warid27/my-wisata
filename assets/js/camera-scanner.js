@@ -49,20 +49,36 @@ function initModalEventListeners() {
             const modal = bootstrap.Modal.getInstance(modalElement);
             const kodeTiket = modalElement.dataset.kodeTiket;
             
-            console.log('Confirm check-in clicked for ticket:', kodeTiket);
+            // Create a hidden form and submit it normally
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = window.location.href;
             
-            // Fill the form and submit
-            document.getElementById('kode_tiket').value = kodeTiket;
+            const input1 = document.createElement('input');
+            input1.type = 'hidden';
+            input1.name = 'checkin_code';
+            input1.value = '1';
             
-            // Switch to manual mode
-            document.getElementById('manualMode').checked = true;
-            document.getElementById('manualMode').dispatchEvent(new Event('change'));
+            const input2 = document.createElement('input');
+            input2.type = 'hidden';
+            input2.name = 'kode_tiket';
+            input2.value = kodeTiket;
             
-            // Hide modal
+            form.appendChild(input1);
+            form.appendChild(input2);
+            
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+            
+            // Hide modal first
             modal.hide();
             
-            // Submit form
-            document.getElementById('checkinForm').submit();
+            // Submit form after modal is hidden
+            setTimeout(() => {
+                document.body.appendChild(form);
+                form.submit();
+            }, 300);
         });
     }
     
