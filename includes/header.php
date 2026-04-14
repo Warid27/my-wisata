@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Custom CSS (includes Bootstrap) -->
 <link href="<?php echo ASSETS_URL; ?>css/style.css?v=<?php echo filemtime($_SERVER['DOCUMENT_ROOT'] . '/my-wisata-pecut/assets/css/style.css'); ?>" rel="stylesheet">
+    <!-- Puter.js CDN -->
+    <script src="https://js.puter.com/v2/"></script>
 
 </head>
 

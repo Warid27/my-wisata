@@ -47,5 +47,9 @@
     ?>
     <script src="<?php echo assets_url('js/homepage.js'); ?>"></script>
     <?php endif; ?>
+    <!-- Chatbot Component -->
+    <?php include __DIR__ . '/chatbot.php'; ?>
+    <!-- Chatbot JS -->
+    <script src="<?php echo assets_url('js/chatbot.js?v=' . time()); ?>"></script>
 </body>
 </html>
