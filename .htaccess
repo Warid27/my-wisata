@@ -1,10 +1,19 @@
 RewriteEngine On
 
-# Jangan ganggu file atau folder asli (CSS, JS, Images)
+RewriteBase /my-wisata-pecut/
+
+# Jangan ganggu file atau folder asli
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Hapus .php secara internal
+# Redirect .php → tanpa .php (harus sebelum rewrite internal)
+RewriteCond %{THE_REQUEST} \s/+my-wisata-pecut/([^.]+)\.php[\s?]
+RewriteRule ^ /my-wisata-pecut/%1 [R=301,L]
+
+# "/" root → index.php
+RewriteRule ^$ index.php [L]
+
+# Hapus .php secara internal (user/login → user/login.php)
 RewriteCond %{REQUEST_FILENAME}\.php -f
-RewriteRule ^([^.]+)$ $1.php [NC,L]
+RewriteRule ^([^.]+)/?$ $1.php [NC,L]

@@ -184,7 +184,8 @@ include __DIR__ . '/../includes/header.php';
                                                             <input type="hidden" name="status" value="paid">
                                                             <button type="submit" name="update_status" 
                                                                     class="btn btn-sm btn-success"
-                                                                    onclick="return confirm('Konfirmasi pembayaran order ini?')">
+                                                                    data-confirm="Konfirmasi pembayaran order ini?"
+                                                                    data-is-danger="false">
                                                                 <i class="bi bi-check"></i>
                                                             </button>
                                                         </form>
@@ -193,7 +194,8 @@ include __DIR__ . '/../includes/header.php';
                                                             <input type="hidden" name="status" value="cancelled">
                                                             <button type="submit" name="update_status" 
                                                                     class="btn btn-sm btn-danger"
-                                                                    onclick="return confirm('Batalkan order ini?')">
+                                                                    data-confirm="Batalkan order ini?"
+                                                                    data-is-danger="true">
                                                                 <i class="bi bi-x"></i>
                                                             </button>
                                                         </form>
@@ -238,9 +240,27 @@ function showOrderDetail(orderId) {
             new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
         })
         .catch(error => {
-            alert('Gagal memuat detail order');
+            showNotification('Gagal memuat detail order', 'error');
         });
 }
+
+// Handle confirmation buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmButtons = document.querySelectorAll('[data-confirm]');
+    
+    confirmButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const message = this.getAttribute('data-confirm');
+            const isDanger = this.getAttribute('data-is-danger') === 'true';
+            const form = this.closest('form');
+            
+            showConfirmation(message, function() {
+                form.submit();
+            }, {isDanger: isDanger});
+        });
+    });
+});
 </script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

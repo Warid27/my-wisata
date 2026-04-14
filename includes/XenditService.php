@@ -29,8 +29,8 @@ class XenditService {
                 'given_names' => $data['customer_name'],
                 'email' => $data['customer_email']
             ],
-            'success_redirect_url' => base_url('user/payment_success.php'),
-            'failure_redirect_url' => base_url('user/payment.php?order=' . $data['external_id']),
+            'success_redirect_url' => get_full_base_url() . 'user/payment_success.php',
+            'failure_redirect_url' => get_full_base_url() . 'user/payment.php?order=' . $data['external_id'],
             'currency' => 'IDR',
             'items' => $data['items'] ?? []
         ];

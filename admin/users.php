@@ -64,9 +64,9 @@ include __DIR__ . '/../includes/header.php';
                 <div class="row g-3">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <input type="text" class="form-control" name="search" 
-                                   placeholder="Cari berdasarkan nama, email, atau nomor telepon..." 
-                                   value="<?php echo htmlspecialchars($search); ?>">
+                            <input type="text" class="form-control" name="search"
+                                placeholder="Cari berdasarkan nama, email, atau nomor telepon..."
+                                value="<?php echo htmlspecialchars($search); ?>">
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -110,7 +110,6 @@ include __DIR__ . '/../includes/header.php';
                                 <th>Email</th>
                                 <th>No. Telepon</th>
                                 <th>Tanggal Daftar</th>
-                                <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -139,21 +138,14 @@ include __DIR__ . '/../includes/header.php';
                                         <small><?php echo date('d M Y', strtotime($user['created_at'])); ?></small>
                                     </td>
                                     <td>
-                                        <?php if ($user['is_active'] == 1): ?>
-                                            <span class="badge bg-success">Active</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary">Inactive</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    onclick="editUser(<?php echo $user['id_user']; ?>)">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                onclick="editUser(<?php echo $user['id_user']; ?>)">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                             <?php if ($user['id_user'] != $_SESSION['user_id']): ?>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                        onclick="deleteUser(<?php echo $user['id_user']; ?>)">
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="deleteUser(<?php echo $user['id_user']; ?>)">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             <?php endif; ?>
@@ -169,7 +161,7 @@ include __DIR__ . '/../includes/header.php';
                 <?php if ($total_pages > 1): ?>
                     <div class="d-flex justify-content-between align-items-center p-3">
                         <small class="text-muted">
-                            Menampilkan <?php echo $offset + 1; ?> - <?php echo min($offset + $per_page, $total_users); ?> 
+                            Menampilkan <?php echo $offset + 1; ?> - <?php echo min($offset + $per_page, $total_users); ?>
                             dari <?php echo $total_users; ?> data
                         </small>
                         <nav>
@@ -253,45 +245,49 @@ include __DIR__ . '/../includes/header.php';
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
 <script>
-// Add User
-document.getElementById('addUserForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData);
-    data.is_active = formData.has('is_active') ? 1 : 0;
-    
-    fetch('<?php echo base_url('api/users.php'); ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('User berhasil ditambahkan');
-            window.location.reload();
-        } else {
-            alert(data.message || 'Gagal menambahkan user');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan');
+    // Add User
+    document.getElementById('addUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        data.is_active = formData.has('is_active') ? 1 : 0;
+
+        fetch('<?php echo base_url('api/users.php'); ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('User berhasil ditambahkan', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showNotification(data.message || 'Gagal menambahkan user', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Terjadi kesalahan', 'error');
+            });
     });
-});
 
-// Edit User (placeholder)
-function editUser(userId) {
-    alert('Fitur edit user akan segera tersedia');
-}
-
-// Delete User (placeholder)
-function deleteUser(userId) {
-    if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
-        alert('Fitur hapus user akan segera tersedia');
+    // Edit User (placeholder)
+    function editUser(userId) {
+        showNotification('Fitur edit user akan segera tersedia', 'info');
     }
-}
+
+    // Delete User (placeholder)
+    function deleteUser(userId) {
+        showConfirmation('Apakah Anda yakin ingin menghapus user ini?', function() {
+            showNotification('Fitur hapus user akan segera tersedia', 'info');
+        }, {
+            isDanger: true
+        });
+    }
 </script>

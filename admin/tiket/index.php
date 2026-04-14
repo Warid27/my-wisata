@@ -136,9 +136,9 @@ include __DIR__ . '/../../includes/header.php';
 
 <script>
 function confirmDelete(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus tiket ini?')) {
+    showConfirmation('Apakah Anda yakin ingin menghapus tiket ini?', function() {
         window.location.href = '<?php echo base_url('admin/tiket/?delete='); ?>' + id;
-    }
+    }, {isDanger: true});
 }
 </script>
 

@@ -26,9 +26,6 @@ function get_tickets_by_event($id_event) {
 function check_ticket_availability($id_tiket, $qty) {
     global $db;
     
-    // Start transaction for atomic check
-    $db->beginTransaction();
-    
     try {
         // Lock the ticket row for update
         $query = "SELECT kuota FROM tiket WHERE id_tiket = ? FOR UPDATE";
@@ -37,7 +34,6 @@ function check_ticket_availability($id_tiket, $qty) {
         $ticket = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$ticket) {
-            $db->rollBack();
             return false;
         }
         
@@ -52,15 +48,8 @@ function check_ticket_availability($id_tiket, $qty) {
         
         $available = $ticket['kuota'] - $sold;
         
-        if ($available >= $qty) {
-            $db->commit();
-            return true;
-        } else {
-            $db->rollBack();
-            return false;
-        }
+        return $available >= $qty;
     } catch (Exception $e) {
-        $db->rollBack();
         return false;
     }
 }

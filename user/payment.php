@@ -72,7 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_payment'])) {
             $stmt->execute([$result['invoice_id'], $id_order]);
             
             // Redirect to Xendit payment page
-            redirect($result['invoice_url']);
+            header("Location: " . $result['invoice_url']);
+            exit();
         } else {
             set_flash_message('error', 'Gagal membuat pembayaran: ' . ($result['error']['message'] ?? 'Unknown error'));
         }

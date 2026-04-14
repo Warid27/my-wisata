@@ -209,7 +209,7 @@ function showOrderDetail(orderId) {
             new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
         })
         .catch(error => {
-            alert('Gagal memuat detail order');
+            showNotification('Gagal memuat detail order', 'error');
         });
 }
 </script>

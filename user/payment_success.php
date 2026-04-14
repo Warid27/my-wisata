@@ -18,7 +18,7 @@ if ($invoice_id) {
     // Try to get order by Xendit invoice ID
     $query = "SELECT * FROM orders WHERE xendit_invoice_id = ? AND id_user = ?";
     $stmt = $db->prepare($query);
-    $stmt->execute([$invoice_id, get_user_id()]);
+    $stmt->execute([$invoice_id, $_SESSION['user_id']]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($order) {

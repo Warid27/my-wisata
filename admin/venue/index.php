@@ -109,9 +109,9 @@ include __DIR__ . '/../../includes/header.php';
 
 <script>
 function confirmDelete(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus venue ini?')) {
+    showConfirmation('Apakah Anda yakin ingin menghapus venue ini?', function() {
         window.location.href = '<?php echo base_url('admin/venue/?delete='); ?>' + id;
-    }
+    }, {isDanger: true});
 }
 </script>
 

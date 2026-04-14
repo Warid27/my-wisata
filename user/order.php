@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/XenditService.php';
 
 // Check if user is logged in
 if (!is_logged_in()) {
@@ -68,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_order'])) {
         
         $query = "INSERT INTO orders (id_user, total, status, id_voucher) VALUES (?, ?, 'pending', ?)";
         $stmt = $db->prepare($query);
-        $stmt->execute([get_user_id(), $final_total, $id_voucher]);
+        $stmt->execute([$_SESSION['user_id'], $final_total, $id_voucher]);
         $id_order = $db->lastInsertId();
         
         // Create order details and generate tickets
@@ -98,10 +99,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_order'])) {
         // Clear cart
         unset($_SESSION['cart']);
         
-        set_flash_message('success', 'Pesanan berhasil dibuat! Silakan lakukan pembayaran');
-        redirect('user/payment.php?order=' . $id_order);
+        // Create Xendit invoice
+        error_log("Starting Xendit invoice creation for order: " . $id_order);
+        try {
+            $xendit = new XenditService();
+            
+            // Get user info
+            $query = "SELECT nama as nama_lengkap, email FROM users WHERE id_user = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$_SESSION['user_id']]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Prepare items for Xendit
+            $items = [];
+            foreach ($cart_items as $item) {
+                $items[] = [
+                    'name' => $item['nama_tiket'],
+                    'quantity' => $item['qty'],
+                    'price' => $item['harga']
+                ];
+            }
+            
+            $invoiceData = [
+                'external_id' => 'ORDER-' . $id_order,
+                'amount' => $final_total,
+                'description' => 'Pembayaran Tiket #' . $id_order,
+                'customer_name' => $user['nama_lengkap'],
+                'customer_email' => $user['email'],
+                'items' => $items
+            ];
+            
+            $result = $xendit->createInvoice($invoiceData);
+            
+            if ($result['success']) {
+                error_log("Xendit invoice created successfully: " . $result['invoice_id']);
+                error_log("Xendit invoice URL: " . $result['invoice_url']);
+                // Update order with Xendit invoice ID
+                $query = "UPDATE orders SET xendit_invoice_id = ? WHERE id_order = ?";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$result['invoice_id'], $id_order]);
+                error_log("Updated order with invoice ID");
+                
+                error_log("Redirecting to: " . $result['invoice_url']);
+                header("Location: " . $result['invoice_url']);
+                exit();
+            } else {
+                error_log("Xendit invoice creation failed: " . json_encode($result));
+                set_flash_message('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
+                redirect('user/payment.php?order=' . $id_order);
+            }
+        } catch (Exception $e) {
+            error_log("Xendit Exception: " . $e->getMessage());
+            set_flash_message('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            redirect('user/payment.php?order=' . $id_order);
+        }
         
     } catch (Exception $e) {
+        error_log("Order transaction failed: " . $e->getMessage());
         $db->rollBack();
         set_flash_message('error', $e->getMessage());
     }
@@ -209,8 +263,9 @@ include __DIR__ . '/../includes/header.php';
                         <h5 class="text-primary"><?php echo format_currency($total - $discount); ?></h5>
                     </div>
 
-                    <form method="POST" onsubmit="return confirm('Apakah Anda yakin ingin melanjutkan pemesanan?');">
-                        <button type="submit" name="process_order" class="btn btn-primary btn-lg w-100">
+                    <form method="POST" id="orderForm">
+                        <input type="hidden" name="process_order" value="1">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
                             <i class="bi bi-lock"></i> Lanjut ke Pembayaran
                         </button>
                     </form>
@@ -226,5 +281,25 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        showConfirmation('Apakah Anda yakin ingin melanjutkan pemesanan?', function() {
+            const submitBtn = document.querySelector('#orderForm button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses pesanan...';
+            
+            // Submit form
+            document.getElementById('orderForm').submit();
+        });
+    });
+});
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

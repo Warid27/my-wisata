@@ -27,13 +27,13 @@ if ($id_order && is_numeric($id_order)) {
               JOIN venue v ON e.id_venue = v.id_venue 
               WHERE o.id_order = ? AND o.id_user = ?";
     $stmt = $db->prepare($query);
-    $stmt->execute([$id_order, get_user_id()]);
+    $stmt->execute([$id_order, $_SESSION['user_id']]);
     $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Get order info
     $query = "SELECT * FROM orders WHERE id_order = ? AND id_user = ?";
     $stmt = $db->prepare($query);
-    $stmt->execute([$id_order, get_user_id()]);
+    $stmt->execute([$id_order, $_SESSION['user_id']]);
     $order_info = $stmt->fetch(PDO::FETCH_ASSOC);
 } else {
     // Get all user tickets
@@ -48,7 +48,7 @@ if ($id_order && is_numeric($id_order)) {
               WHERE o.id_user = ? 
               ORDER BY e.tanggal DESC, o.tanggal_order DESC";
     $stmt = $db->prepare($query);
-    $stmt->execute([get_user_id()]);
+    $stmt->execute([$_SESSION['user_id']]);
     $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -117,8 +117,9 @@ include __DIR__ . '/../includes/header.php';
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="upcoming">
                     <?php
-                    $upcoming_tickets = array_filter($tickets, function($t) {
-                        return $t['event_tanggal'] >= date('Y-m-d') && $t['order_status'] === 'paid';
+                    $today = date('Y-m-d');
+                    $upcoming_tickets = array_filter($tickets, function($t) use ($today) {
+                        return $t['event_tanggal'] >= $today && $t['order_status'] === 'paid';
                     });
                     ?>
                     <?php if (empty($upcoming_tickets)): ?>
@@ -132,8 +133,9 @@ include __DIR__ . '/../includes/header.php';
                 
                 <div class="tab-pane fade" id="past">
                     <?php
-                    $past_tickets = array_filter($tickets, function($t) {
-                        return $t['event_tanggal'] < date('Y-m-d') || $t['order_status'] !== 'paid';
+                    $today = date('Y-m-d');
+                    $past_tickets = array_filter($tickets, function($t) use ($today) {
+                        return $t['event_tanggal'] < $today && $t['order_status'] === 'paid';
                     });
                     ?>
                     <?php if (empty($past_tickets)): ?>

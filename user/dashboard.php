@@ -369,10 +369,12 @@ function updateProfile() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Profil berhasil diperbarui');
-            location.reload();
+            showNotification('Profil berhasil diperbarui', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
-            alert(data.message);
+            showNotification(data.message, 'error');
         }
     });
 }

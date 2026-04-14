@@ -150,9 +150,9 @@ include __DIR__ . '/../../includes/header.php';
 
 <script>
     function confirmDelete(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus voucher ini?')) {
+        showConfirmation('Apakah Anda yakin ingin menghapus voucher ini?', function() {
             window.location.href = '<?php echo base_url('admin/voucher/?delete='); ?>' + id;
-        }
+        }, {isDanger: true});
     }
 
     function toggleStatus(id) {

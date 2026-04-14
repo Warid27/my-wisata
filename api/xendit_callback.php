@@ -58,25 +58,24 @@ try {
     }
     
     // Process different callback types
-    if (isset($data['event'])) {
-        switch ($data['event']) {
-            case 'invoice.paid':
+    // Xendit sends invoice data directly, not wrapped in event/data structure
+    if (isset($data['status'])) {
+        switch ($data['status']) {
+            case 'PAID':
                 handleInvoicePaid($data);
                 break;
-            case 'invoice.expired':
+            case 'EXPIRED':
                 handleInvoiceExpired($data);
                 break;
-            case 'invoice.failed':
+            case 'FAILED':
                 handleInvoiceFailed($data);
                 break;
-            case 'payment_token.activation':
-                // Payment token activation - just log it
-                error_log('Payment token activated: ' . json_encode($data['data']));
-                break;
             default:
-                error_log('Unhandled webhook event: ' . $data['event']);
+                error_log('Unhandled webhook status: ' . $data['status']);
                 break;
         }
+    } else {
+        error_log('No status found in webhook data');
     }
     
     // Return success response
@@ -95,21 +94,37 @@ try {
 function handleInvoicePaid($data) {
     global $db;
     
-    $externalId = $data['data']['external_id'] ?? '';
-    $invoiceId = $data['data']['id'] ?? '';
+    $externalId = $data['external_id'] ?? '';
+    $invoiceId = $data['id'] ?? '';
+    
+    error_log("Processing invoice paid: external_id=$externalId, invoice_id=$invoiceId");
     
     // Extract order ID from external_id
     if (strpos($externalId, 'ORDER-') === 0) {
         $id_order = (int)substr($externalId, 6);
         
+        error_log("Extracted order ID: $id_order");
+        
         // Update order status
         $query = "UPDATE orders SET status = 'paid', updated_at = NOW() 
                   WHERE id_order = ? AND status = 'pending'";
         $stmt = $db->prepare($query);
-        $stmt->execute([$id_order]);
+        $result = $stmt->execute([$id_order]);
+        
+        $rowCount = $stmt->rowCount();
+        error_log("Update result: success=$result, rows_affected=$rowCount");
         
         // Log the payment
         error_log("Order #$id_order marked as paid via Xendit invoice $invoiceId");
+        
+        // Verify the update
+        $query = "SELECT status FROM orders WHERE id_order = ?";
+        $stmt = $db->prepare($query);
+        $stmt->execute([$id_order]);
+        $status = $stmt->fetchColumn();
+        error_log("Order #$id_order current status: $status");
+    } else {
+        error_log("Invalid external_id format: $externalId");
     }
 }
 
@@ -119,7 +134,7 @@ function handleInvoicePaid($data) {
 function handleInvoiceExpired($data) {
     global $db;
     
-    $externalId = $data['data']['external_id'] ?? '';
+    $externalId = $data['external_id'] ?? '';
     
     if (strpos($externalId, 'ORDER-') === 0) {
         $id_order = (int)substr($externalId, 6);
@@ -140,7 +155,7 @@ function handleInvoiceExpired($data) {
 function handleInvoiceFailed($data) {
     global $db;
     
-    $externalId = $data['data']['external_id'] ?? '';
+    $externalId = $data['external_id'] ?? '';
     
     if (strpos($externalId, 'ORDER-') === 0) {
         $id_order = (int)substr($externalId, 6);
