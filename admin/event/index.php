@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../includes/components/search_filter.php';
 require_once __DIR__ . '/../../includes/components/data_table.php';
 require_once __DIR__ . '/../../includes/components/pagination.php';
 
-require_admin();
+require_staff();
 
 $page_title = 'Manajemen Event';
 

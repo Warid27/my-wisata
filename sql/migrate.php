@@ -1,6 +1,16 @@
 <?php
+// Parse CLI arguments if running from command line
+if (php_sapi_name() === 'cli') {
+    $options = getopt('', ['key:', 'file:']);
+    $key = $options['key'] ?? null;
+    $file = $options['file'] ?? null;
+} else {
+    $key = $_GET['key'] ?? null;
+    $file = $_GET['file'] ?? null;
+}
+
 // Prevent direct access if no key provided
-if (!isset($_GET['key'])) {
+if (!$key) {
     die('Access denied. Migration key required.');
 }
 
@@ -8,7 +18,7 @@ if (!isset($_GET['key'])) {
 require_once __DIR__ . '/../config/config.php';
 
 // Verify migration key
-if (!defined('MIGRATE_KEY') || $_GET['key'] !== MIGRATE_KEY) {
+if (!defined('MIGRATE_KEY') || $key !== MIGRATE_KEY) {
     die('Invalid migration key.');
 }
 
@@ -34,21 +44,36 @@ $pdo->exec("
     )
 ");
 
-// Get all SQL files in order
-$sqlFiles = glob(__DIR__ . '/*.sql');
-sort($sqlFiles);
+// Check if running specific migration
+if ($file) {
+    $specificFile = __DIR__ . '/' . basename($file);
+    if (file_exists($specificFile) && preg_match('/^\d{3}_.*\.sql$/', basename($specificFile))) {
+        $migrationFiles = [$specificFile];
+        if (php_sapi_name() !== 'cli') {
+            echo "<h2>Running specific migration: " . basename($specificFile) . "</h2>";
+        } else {
+            echo "Running specific migration: " . basename($specificFile) . "\n";
+        }
+    } else {
+        die("Invalid migration file specified.\n");
+    }
+} else {
+    // Get all SQL files in order
+    $sqlFiles = glob(__DIR__ . '/*.sql');
+    sort($sqlFiles);
 
-// Filter only migration files (001-999 pattern)
-$migrationFiles = array_filter($sqlFiles, function($file) {
-    return preg_match('/\/(\d{3})_[^\/]+\.sql$/', $file);
-});
+    // Filter only migration files (001-999 pattern)
+    $migrationFiles = array_filter($sqlFiles, function($file) {
+        return preg_match('/\/(\d{3})_[^\/]+\.sql$/', $file);
+    });
 
-// Sort migration files numerically
-usort($migrationFiles, function($a, $b) {
-    $aNum = (int)basename($a, '.sql');
-    $bNum = (int)basename($b, '.sql');
-    return $aNum - $bNum;
-});
+    // Sort migration files numerically
+    usort($migrationFiles, function($a, $b) {
+        $aNum = (int)basename($a, '.sql');
+        $bNum = (int)basename($b, '.sql');
+        return $aNum - $bNum;
+    });
+}
 
 echo "<h1>Database Migration</h1>";
 echo "<style>
@@ -75,7 +100,13 @@ foreach ($migrationFiles as $file) {
         continue;
     }
     
-    echo "<h3>Running: $filename</h3>";
+    if (php_sapi_name() !== 'cli') {
+        echo "<h3>Running: $filename</h3>";
+    } else {
+        echo "Running: $filename\n";
+    }
+    
+    $transactionStarted = false;
     
     try {
         // Read SQL file
@@ -84,8 +115,7 @@ foreach ($migrationFiles as $file) {
         // Split SQL statements (basic split by semicolon)
         $statements = array_filter(array_map('trim', explode(';', $sql)));
         
-        $pdo->beginTransaction();
-        
+        // Execute statements without transaction (DDL can't be rolled back in MySQL)
         foreach ($statements as $statement) {
             if (!empty($statement)) {
                 $pdo->exec($statement);
@@ -96,15 +126,20 @@ foreach ($migrationFiles as $file) {
         $stmt = $pdo->prepare("INSERT INTO migrations (filename) VALUES (?)");
         $stmt->execute([$filename]);
         
-        $pdo->commit();
-        
-        echo "<p class='success'>✓ Success: $filename</p>";
+        if (php_sapi_name() !== 'cli') {
+            echo "<p class='success'>✓ Success: $filename</p>";
+        } else {
+            echo "✓ Success: $filename\n";
+        }
         $migrationsRun++;
         
     } catch (Exception $e) {
-        $pdo->rollBack();
         $errorMsg = "✗ Error in $filename: " . $e->getMessage();
-        echo "<p class='error'>$errorMsg</p>";
+        if (php_sapi_name() !== 'cli') {
+            echo "<p class='error'>$errorMsg</p>";
+        } else {
+            echo "$errorMsg\n";
+        }
         $errors[] = $errorMsg;
         break; // Stop on first error
     }

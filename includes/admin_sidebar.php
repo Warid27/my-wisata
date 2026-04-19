@@ -61,12 +61,14 @@ function is_menu_active($page, $current, $uri = '') {
             <li class="nav-section">
                 <div class="nav-section-title">Master Data</div>
             </li>
+            <?php if (is_admin()): ?>
             <li class="nav-item">
                 <a href="<?php echo base_url('admin/users.php'); ?>" class="nav-link <?php echo is_menu_active('users', $current_page, $request_uri); ?>">
                     <i class="nav-icon bi bi-people"></i>
                     <span class="nav-text">Users</span>
                 </a>
             </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a href="<?php echo base_url('admin/venue/'); ?>" class="nav-link <?php echo is_menu_active('venue', $current_page, $request_uri); ?>">
                     <i class="nav-icon bi bi-building"></i>
@@ -124,7 +126,7 @@ function is_menu_active($page, $current, $uri = '') {
                 </div>
                 <div class="user-info">
                     <div class="user-name"><?php echo htmlspecialchars($_SESSION['user_nama'] ?? 'Admin'); ?></div>
-                    <div class="user-role">Administrator</div>
+                    <div class="user-role"><?php echo ucfirst($_SESSION['user_role'] ?? 'admin'); ?></div>
                 </div>
                 <a href="<?php echo base_url('logout.php'); ?>" class="user-logout" title="Logout">
                     <i class="bi bi-box-arrow-right"></i>

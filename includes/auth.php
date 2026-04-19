@@ -13,6 +13,13 @@ function require_admin() {
     }
 }
 
+function require_staff() {
+    if (!is_staff()) {
+        set_flash_message('error', 'Akses ditolak. Anda bukan staff');
+        redirect('user/');
+    }
+}
+
 function require_user() {
     if (is_admin()) {
         set_flash_message('info', 'Admin tidak dapat mengakses halaman user');
