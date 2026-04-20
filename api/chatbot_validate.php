@@ -39,37 +39,22 @@ echo json_encode([
  * Validate chat message for prompt injection and security threats
  */
 function validateChatMessage($message) {
-    // Check for mathematical expressions
-    if (preg_match('/\d+\s*[\+\-\*\/]\s*\d+/', $message)) {
+    // Check for obvious mathematical expressions with equals
+    if (preg_match('/\d+\s*[+\-*/]\s*\d+\s*=/', $message)) {
         return [
             'valid' => false,
             'reason' => 'mathematical_expression'
         ];
     }
     
-    // Check for prompt injection patterns
+    // Check for serious prompt injection patterns only
     $blockedPatterns = [
         '/ignore\s+(all|previous)\s+instructions/i',
         '/system\s*:/i',
-        '/act\s+as\s+/i',
-        '/pretend\s+to\s+be/i',
-        '/roleplay/i',
-        '/simulate/i',
-        '/you\s+are\s+now/i',
+        '/you\s+are\s+now\s+(a|an)\s+/i',
         '/forget\s+everything/i',
-        '/new\s+role/i',
-        '/change\s+personality/i',
-        '/developer\s+mode/i',
-        '/admin\s+mode/i',
-        '/debug\s+mode/i',
-        '/override/i',
-        '/bypass/i',
         '/jailbreak/i',
-        '/=[=]+/',
-        '/\[\[.*?\]\]/',
-        '/{{.*?}}/',
-        '/```.*?```/s',
-        '/<script.*?>.*?<\/script>/is'
+        '/<script[\s\S]*?<\/script>/is'
     ];
     
     foreach ($blockedPatterns as $pattern) {
@@ -77,28 +62,6 @@ function validateChatMessage($message) {
             return [
                 'valid' => false,
                 'reason' => 'prompt_injection'
-            ];
-        }
-    }
-    
-    // Check for non-MyWisata topics
-    $blockedTopics = [
-        '/calculate/i',
-        '/solve\s+this/i',
-        '/what\s+is\s+\d+/i',
-        '/compute/i',
-        '/program/i',
-        '/code/i',
-        '/hack/i',
-        '/crack/i',
-        '/exploit/i'
-    ];
-    
-    foreach ($blockedTopics as $topic) {
-        if (preg_match($topic, $message)) {
-            return [
-                'valid' => false,
-                'reason' => 'off_topic'
             ];
         }
     }
@@ -116,18 +79,12 @@ function validateChatMessage($message) {
  * Sanitize message by removing potential injection markers
  */
 function sanitizeMessage($message) {
+    // Only remove dangerous script tags and system markers
     $sanitized = $message;
     
-    // Remove potential prompt injection markers
-    $sanitized = preg_replace('/\[\[.*?\]\]/', '', $sanitized);
-    $sanitized = preg_replace('/{{.*?}}/', '', $sanitized);
-    $sanitized = preg_replace('/```[\s\S]*?```/', '', $sanitized);
+    // Remove only dangerous elements
     $sanitized = preg_replace('/<script[\s\S]*?<\/script>/i', '', $sanitized);
     $sanitized = preg_replace('/\[SYSTEM\]/i', '', $sanitized);
-    $sanitized = preg_replace('/\[INST\]/i', '', $sanitized);
-    $sanitized = preg_replace('/\[USER\]/i', '', $sanitized);
-    $sanitized = preg_replace('/\[ASSISTANT\]/i', '', $sanitized);
-    $sanitized = preg_replace('/=[=]+/', '', $sanitized);
     
     return trim($sanitized);
 }
